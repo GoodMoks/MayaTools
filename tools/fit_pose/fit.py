@@ -1,8 +1,8 @@
 import re
 from maya.OpenMaya import MGlobal
 import pymel.core as pm
-import MayaTools.utils.connections
-import MayaTools.utils.dag
+import core.connections as connections
+import core.dag as dag
 
 
 class FitObjects(object):
@@ -10,11 +10,11 @@ class FitObjects(object):
 
     @staticmethod
     def get_skinCluster(obj):
-        return MayaTools.utils.dag.history(obj, type='skinCluster')
+        return dag.history(obj, type='skinCluster')
 
     @staticmethod
     def get_index_common_connections(obj1, obj2, attr):
-        common_con = MayaTools.utils.connections.get_common_connections(obj1, obj2, attr=attr)
+        common_con = connections.get_common_connections(obj1, obj2, attr=attr)
         if common_con:
             return re.findall('[0-9]+', common_con[0])[0]
 
@@ -185,9 +185,9 @@ class FitController(object):
                 if not pm.objExists(joint_fit):
                     continue
 
-                if MayaTools.utils.dag.get_children(joint_fit):
-                    child = MayaTools.utils.dag.get_children(joint_fit)
-                    parent = MayaTools.utils.dag.get_parent(joint_fit)[0]
+                if dag.get_children(joint_fit):
+                    child = dag.get_children(joint_fit)
+                    parent = dag.get_parent(joint_fit)[0]
                     print child
                     print parent
                     pm.parent(child, parent)
