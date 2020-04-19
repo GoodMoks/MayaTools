@@ -1,5 +1,6 @@
 import pymel.core as pm
 
+''' Module for work with vector, distance, etc. '''
 
 def get_distance(source, target):
     """ get distance between 2 objects
@@ -14,3 +15,8 @@ def get_distance(source, target):
     vector = source_v - target_v
 
     return vector.length()
+
+def getDistance(v0, v1):
+    v = v1 - v0
+
+    return v.length()

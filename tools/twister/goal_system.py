@@ -1,8 +1,25 @@
 import pymel.core as pm
+import MayaTools.core.connections as connections
+import MayaTools.core.constraint as constraint
+import MayaTools.core.attribute as attribute
+import MayaTools.core.transform as transform
+import MayaTools.core.particle as particle
+import MayaTools.core.vector as vector
+import MayaTools.core.dag as dag
 
 
 class Goal(object):
     """ Main class for goal system """
+
+    @staticmethod
+    def is_needed_targets(obj):
+        """ check needed targets loc """
+        child = dag.get_children(obj)
+        if not child or len(child) >= 2:
+            return True
+        if not constraint.get_connected_constraint(child[0]):
+            return True
+        return False
 
     def __init__(self, obj):
         self.obj = obj
@@ -155,7 +172,7 @@ class Twist(Goal):
         self.goal_loc = pm.spaceLocator(n='{}_goal_{}'.format(self.obj, self.SYSTEM))
         transform.align_transform(self.obj, self.goal_loc)
         pm.parent(self.goal_loc, self.base_rotate_loc)
-        pm.setAttr('{}.t{}'.format(self.goal_loc, self.aim_axis), twister_utils.get_length_chain(self.obj) / 1)
+        pm.setAttr('{}.t{}'.format(self.goal_loc, self.aim_axis), get_length_chain(self.obj) / 1)
 
         # aim dynamic loc
         self.dynamic_loc = pm.spaceLocator(n='{}_dynamic'.format(self.obj))
@@ -163,11 +180,11 @@ class Twist(Goal):
         pm.parent(self.dynamic_loc, self.main_grp)
 
         # target loc
-        if twister_utils.is_needed_targets(self.obj):
+        if self.is_needed_targets(self.obj):
             self.target_loc = pm.spaceLocator(n='{}_target_loc'.format(self.obj))
             transform.align_transform(self.obj, self.target_loc)
             pm.parent(self.target_loc, self.base_loc)
-            pm.setAttr('{}.t{}'.format(self.target_loc, self.axis), twister_utils.get_length_chain(self.obj) / 2)
+            pm.setAttr('{}.t{}'.format(self.target_loc, self.axis), get_length_chain(self.obj) / 2)
 
     def goal_connect(self):
         self.goal_transform, self.particle = particle.create_goal(self.goal_loc, base_name=self.obj,
@@ -175,18 +192,18 @@ class Twist(Goal):
         pm.parent([self.goal_transform, self.particle], self.main_grp)
 
         # constraint base loc to parents targets obj
-        targets_rotate = twister_utils.get_targets_from_obj(self.obj, channels=self.CHANNELS)
+        targets_rotate = get_targets_from_obj(self.obj, channels=self.CHANNELS)
         pm.orientConstraint(targets_rotate, self.base_loc)
 
         # constraint base loc, dynamic loc to parents targets obj
         pm.pointConstraint(self.obj, self.base_loc)
         pm.pointConstraint(self.obj, self.dynamic_loc)
 
-        if twister_utils.is_needed_targets(self.obj):
+        if self.is_needed_targets(self.obj):
             targets = self.target_loc
         else:
-            child = twister_utils.get_child(self.obj)[0]
-            targets = twister_utils.get_targets_from_obj(child, channels=['tx', 'ty', 'tz'])
+            child = dag.get_children(self.obj)[0]
+            targets = get_targets_from_obj(child, channels=['tx', 'ty', 'tz'])
 
         pm.aimConstraint(targets, self.dynamic_loc, mo=True, aimVector=(1, 0, 0),
                          upVector=(0, 1, 0), worldUpType='object',
@@ -216,3 +233,21 @@ class Twist(Goal):
         self.add_attr()
         self.con_attr()
         self.hide_loc()
+
+
+def get_length_chain(obj, default=5):
+    """ get length chain """
+
+    jnt = dag.get_children(obj)
+    if not jnt:
+        jnt = dag.get_parent(obj)
+
+    if jnt:
+        return vector.get_distance(obj, jnt)
+    else:
+        return default
+
+
+def get_targets_from_obj(obj, channels):
+    constraint_child = constraint.get_connected_constraint(obj, channels=channels)[0]
+    return constraint.get_target_constraint(constraint_child)

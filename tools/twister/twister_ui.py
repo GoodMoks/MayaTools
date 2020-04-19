@@ -1,19 +1,24 @@
+import pymel.core as pm
 from PySide2 import QtWidgets
 from PySide2 import QtCore
 from PySide2 import QtGui
-from core.ui import qtFloatSlider
-import pymel.core as pm
+from MayaTools.core.ui import qtFloatSlider
+
 import goal_contoller
-
-reload(goal_contoller)
-
 
 """
 import sys
-sys.path.append(r'E:\Work\Pipeline\Projects')
-import MayaTools.twister.twister_ui as ui
+sys.path.append(r'E:\Work\Pipeline\Projects\Tools')
+import MayaTools.tools.twister.twister_ui as ui
+
 reload(ui)
 ui.TwisterUI.showUI()
+
+import sys
+sys.path.append(r'E:\Work\Pipeline\Projects\Tools')
+from MayaTools.tools.twister.twister_ui import TwisterUI
+TwisterUI.showUI()
+
 """
 
 
@@ -55,26 +60,16 @@ class TwisterUI(QtWidgets.QDialog):
         self.update_selection()
         self.enable_ui(state=False)
 
-    # @classmethod
-    # def showUI(cls):
-    #     if not cls.WINDOW_INSTANCE:
-    #         cls.WINDOW_INSTANCE = TwisterUI()
-    #
-    #     if cls.WINDOW_INSTANCE.isHidden():
-    #         cls.WINDOW_INSTANCE.show()
-    #     else:
-    #         cls.WINDOW_INSTANCE.raise_()
-    #         cls.WINDOW_INSTANCE.activateWindow()
+    @classmethod
+    def showUI(cls):
+        if not cls.WINDOW_INSTANCE:
+            cls.WINDOW_INSTANCE = TwisterUI()
 
-    def showUI(self):
-        try:
-            twister.close()  # pylint: disable=E0601
-            twister.deleteLater()
-        except:
-            pass
-
-        twister = TwisterUI()
-        twister.show()
+        if cls.WINDOW_INSTANCE.isHidden():
+            cls.WINDOW_INSTANCE.show()
+        else:
+            cls.WINDOW_INSTANCE.raise_()
+            cls.WINDOW_INSTANCE.activateWindow()
 
     def create_widgets(self):
 
@@ -281,13 +276,11 @@ class TwisterUI(QtWidgets.QDialog):
             self.item = goal_contoller.GoalItem()
             return
 
-
         self.many_selected = []
         for item in items:
             Item = goal_contoller.GoalItem()
             Item.set_item(item.text())
             self.many_selected.append(Item)
-
 
         if len(items) == 1:
             self.item = goal_contoller.GoalItem()
@@ -347,11 +340,12 @@ class TwisterUI(QtWidgets.QDialog):
         QtWidgets.QMessageBox.information(self, title, information)
 
 
-try:
-    twister.close()  # pylint: disable=E0601
-    twister.deleteLater()
-except:
-    pass
+def showUI_dev():
+    try:
+        twister.close()  # pylint: disable=E0601
+        twister.deleteLater()
+    except:
+        pass
 
-twister = TwisterUI()
-twister.show()
+    twister = TwisterUI()
+    twister.show()

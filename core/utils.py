@@ -1,5 +1,7 @@
 import pymel.core as pm
 
+""" Module for other useful functions """
+
 def create_goal(obj, base_name, prefix=None, w=0.5):
     """ create particle and apply goal
 

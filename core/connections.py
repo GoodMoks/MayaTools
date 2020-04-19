@@ -1,5 +1,9 @@
 import pymel.core as pm
 
+"""
+Module for works with connections 
+"""
+
 CHANNELS_LIST = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']
 
 

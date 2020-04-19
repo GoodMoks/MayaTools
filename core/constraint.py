@@ -1,6 +1,10 @@
 import pymel.core as pm
-import MayaTools.utils.connections as connections
+import MayaTools.core.connections as connections
 
+
+"""
+Module for works with connections 
+"""
 
 def is_constraint(obj):
     """ check is constraint

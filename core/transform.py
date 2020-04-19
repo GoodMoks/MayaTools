@@ -1,5 +1,7 @@
 import pymel.core as pm
 
+""" Module for work with transform """
+
 def align_transform(source, target, t=True, ro=True):
     """ align transform constraint method
 

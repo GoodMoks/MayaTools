@@ -1,4 +1,7 @@
 import pymel.core as pm
+import maya.OpenMaya as om
+import goal_system
+import MayaTools.core.constraint as constraint
 
 
 class GoalItem(object):
@@ -61,7 +64,7 @@ class GoalItem(object):
     def get_position_goal(self):
         """ get values for goal twist loc in scene """
         # get length object chain
-        length = twister_utils.get_length_chain(pm.PyNode(self.object))
+        length = goal_system.get_length_chain(pm.PyNode(self.object))
         # check axis where exist value
         axis = [x for x in ['tx', 'ty', 'tz'] if round(pm.getAttr('{}.{}'.format(self.goal_twist_node, x)), 2)][0]
         # get value on found axis
@@ -112,11 +115,11 @@ class GoalMain(object):
 
     @staticmethod
     def add_point(obj):
-        return Point(obj)
+        return goal_system.Point(obj)
 
     @staticmethod
     def add_twist(obj, axis):
-        return Twist(obj, axis)
+        return goal_system.Twist(obj, axis)
 
     @staticmethod
     def get_selection():
