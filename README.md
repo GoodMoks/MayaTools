@@ -39,7 +39,7 @@ import ...
 import MayaTools.utils.constraint.restore_constraint
 
 ```
-- ###Utility modules use only Maya standard functions
+- ### Utility modules use only Maya standard functions
 ```python
 # Wrong
 def get_parent(obj):
@@ -49,7 +49,7 @@ def get_parent(obj):
 def get_parent(obj):
     return pm.listRelatives(obj, p=True)
 ```
-- ###Use only pymel because cmds not working with pymel object
+- ### Use only pymel because cmds not working with pymel object
 ```python
 import pymel.core as pm
 import maya.cmds as cmds
@@ -59,7 +59,7 @@ cmds.group(sel_pm)
 # Error: TypeError: Object 'sel_pm' is invalid # 
 ```
 
-- ###Give full names
+- ### Give full names
 ```python
 # Wrong
 sel = pm.selected()
@@ -70,7 +70,7 @@ selection = pm.selected()
 connections = pm.listConnections()
 ```
 
-- ###PEP8
+- ### PEP8
 | Type | Public | Internal |
 | :--- | :--- | :--- |
 | Packages | `lower_with_under` |  |
