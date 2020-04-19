@@ -24,7 +24,7 @@ reload(ui)
 ui.fit_ui.FitUI()
 
 ```
-- ###Minimum dependencies in module utils
+- ### Minimum dependencies in module utils
     - ##### Import only important method or difficult
         - ##### Import only needed method
 ```python
