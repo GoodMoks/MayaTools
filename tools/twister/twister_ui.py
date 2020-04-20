@@ -4,22 +4,7 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 from MayaTools.core.ui import qtFloatSlider
 
-import goal_contoller
-
-"""
-import sys
-sys.path.append(r'E:\Work\Pipeline\Projects\Tools')
-import MayaTools.tools.twister.twister_ui as ui
-
-reload(ui)
-ui.TwisterUI.showUI()
-
-import sys
-sys.path.append(r'E:\Work\Pipeline\Projects\Tools')
-from MayaTools.tools.twister.twister_ui import TwisterUI
-TwisterUI.showUI()
-
-"""
+import twister_contoller
 
 
 class TwisterUI(QtWidgets.QDialog):
@@ -36,8 +21,8 @@ class TwisterUI(QtWidgets.QDialog):
         super(TwisterUI, self).__init__(parent)
         self.axis = 'X'
         self.type_system = 'all'
-        self.item = goal_contoller.GoalItem()
-        self.goal_class = goal_contoller.GoalMain()
+        self.item = twister_contoller.GoalItem()
+        self.goal_class = twister_contoller.GoalMain()
         # self.item = GoalItem()
 
         self.setWindowTitle('Mr. Twister')
@@ -273,20 +258,20 @@ class TwisterUI(QtWidgets.QDialog):
         """ get selected items in listWidget """
         items = self.list_wdg.selectedItems()
         if not items:
-            self.item = goal_contoller.GoalItem()
+            self.item = twister_contoller.GoalItem()
             return
 
         self.many_selected = []
         for item in items:
-            Item = goal_contoller.GoalItem()
+            Item = twister_contoller.GoalItem()
             Item.set_item(item.text())
             self.many_selected.append(Item)
 
         if len(items) == 1:
-            self.item = goal_contoller.GoalItem()
+            self.item = twister_contoller.GoalItem()
             self.item.set_item(items[0].text())
         else:
-            self.item = goal_contoller.GoalItem()
+            self.item = twister_contoller.GoalItem()
             self.item.set_item(items[:-1][0].text())
 
     def add_system(self):
