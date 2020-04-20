@@ -1,6 +1,6 @@
 import pymel.core as pm
 import fit_controller
-import MayaTools.utils.ui.separator
+import MayaTools.core.ui.separator
 
 
 class FitUI(object):
