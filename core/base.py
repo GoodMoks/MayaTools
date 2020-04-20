@@ -40,3 +40,17 @@ def isShape(obj):
         return False
 
     return True
+
+def get_instances():
+    """ get all instance object in the scene
+
+    :return: 'list' with instances or []
+    """
+    instances = []
+    iterDag = om.MItDag(om.MItDag.kBreadthFirst)
+    while not iterDag.isDone():
+        instanced = om.MItDag.isInstanced(iterDag)
+        if instanced:
+            instances.append(iterDag.fullPathName())
+        iterDag.next()
+    return instances
