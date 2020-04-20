@@ -1,15 +1,6 @@
 import pymel.core as pm
-import fit
+import fit_controller
 import MayaTools.utils.ui.separator
-
-"""
-import sys
-sys.path.append(r'E:\Work\Pipeline\Projects')
-from MayaTools.fit_pose import fit_ui
-fit_ui.FitUI()
-
-"""
-
 
 
 class FitUI(object):
@@ -17,7 +8,7 @@ class FitUI(object):
     WIDTH = 150
 
     def __init__(self):
-        self.controller = fit.FitController()
+        self.controller = fit_controller.FitController()
         self.showUI()
 
     def showUI(self):

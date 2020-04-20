@@ -1,5 +1,5 @@
 import pymel.core as pm
-import MayaTools.core.shape as shape
+import MayaTools.core.base as base
 
 """ Module for work with DAG hierarchy """
 
@@ -14,7 +14,7 @@ def get_children(obj, all=False, shapes=False):
     child = pm.listRelatives(obj, c=True, ad=all)
     if child:
         if not shapes:
-            return [c for c in child if not shape.isShape(c)]
+            return [c for c in child if not base.isShape(c)]
         return child
 
 
