@@ -12,7 +12,7 @@ class AddInBetweenUI(object):
         self.show()
 
     @classmethod
-    def close_window(cls):
+    def close_window(cls, *args):
         pm.deleteUI("jnt_between")
 
     def check_box(self):
