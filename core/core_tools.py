@@ -23,6 +23,7 @@ if __name__ == '__main__':
     get_MObject()
     get_history()
     isShape()
+    get_instances()
 
     ''' connections '''
     get_common_connections()
