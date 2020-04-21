@@ -60,9 +60,9 @@ def get_instances():
 
 
 def get_object_with_attr(obj_type, attr):
-    """
+    """ get objects who has given attr
 
-    :param type: 'om.MFn.kLocator'
+    :param obj_type: 'om.MFn.kLocator'
     :param attr: 'str' name of attr
     :return: 'list' with objects
     """
@@ -70,8 +70,6 @@ def get_object_with_attr(obj_type, attr):
     iterDag = om.MItDag(om.MItDag.kDepthFirst, obj_type)
     while not iterDag.isDone():
         m_object = iterDag.currentItem()
-        fn_dag_node = om.MFnDagNode(m_object)
-        name = fn_dag_node.fullPathName()
         m_objFn = om.MFnDependencyNode(m_object)
         if m_objFn.hasAttribute(attr):
             instances.append(iterDag.fullPathName())
