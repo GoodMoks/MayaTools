@@ -17,6 +17,13 @@ def get_children(obj, all=False, shapes=False):
             return [c for c in child if not base.isShape(c)]
         return child
 
+def get_shapes(obj):
+    """ get shapes for given object
+
+    :param obj: 'str' object
+    :return: 'list' with shapes or []
+    """
+    return pm.listRelatives(obj, s=True)
 
 def get_parent(obj, all=False):
     """ get parents for given objects
