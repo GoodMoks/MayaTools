@@ -75,3 +75,20 @@ def get_object_with_attr(obj_type, attr):
             instances.append(iterDag.fullPathName())
         iterDag.next()
     return instances
+
+
+def is_pymel(obj):
+    """ check is pymel object
+
+    :param obj: object
+    :return: 'bool' True if pymel object
+    """
+    try:
+        module = obj.__module__
+        print module
+    except AttributeError:
+        try:
+            module = obj.__name__
+        except AttributeError:
+            return False
+    return module.startswith('pymel')
