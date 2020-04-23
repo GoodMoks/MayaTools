@@ -4,6 +4,7 @@ import MayaTools.core.dag as dag
 import fit
 
 
+
 class FitController(object):
     @staticmethod
     def is_mesh(obj):
@@ -34,7 +35,7 @@ class FitController(object):
 
     def calculate_bindPreMatrix(self, skinCluster):
         matrix = pm.getAttr('{}.matrix'.format(skinCluster))
-        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix]
+        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix if x]
         return inverse_matrix
 
     def get_selected_mesh(self):
@@ -93,7 +94,6 @@ class FitController(object):
             self.reset_bindPreMatrix(selected_mesh)
 
     def check_mesh(self, parent):
-        print parent
         selected_mesh = self.get_selected_mesh()
         if selected_mesh:
             skinCluster = fit.FitObjects.get_skinCluster(selected_mesh[0])
