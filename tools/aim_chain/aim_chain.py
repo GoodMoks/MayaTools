@@ -1,15 +1,5 @@
 import pymel.core as pm
-import maya.OpenMaya as om
-import MayaTools.core.animation as animation
-
-
-"""
-import sys
-sys.path.append(r'E:\Work\Pipeline\Projects\Tools')
-import MayaTools.tools.aim_chain.aim_chain as aim
-reload(aim)
-aim.AimChain()
-"""
+import aim_chain_controller
 
 
 class AimChain(object):
@@ -18,29 +8,10 @@ class AimChain(object):
     POINT_GRP = 'bake_point_locs'
     PIVOT_GRP = 'bake_pivot_locs'
 
-    @staticmethod
-    def get_selected():
-        sel = pm.selected()
-        if not sel:
-            om.MGlobal.displayError('Nothing selected')
-            return None
-        return sel
-
-    @staticmethod
-    def make_locator(obj, prefix):
-        loc = pm.spaceLocator(n='{}_{}_loc'.format(obj, prefix))
-        return loc
-
-    @staticmethod
-    def bake_result(obj):
-        pm.bakeResults(obj, t=(animation.get_playback_range()), simulation=True)
-
-    def __init__(self):
-        self.forward_axis = 'x'
-        self.up_axis = 'y'
-        self.negative = False
-        self.point_locators = []
-        # self.last_point = True
+    def __init__(self, controls, axis):
+        self.controls = controls
+        self.axis = axis
+        self.set_axis(self.axis)
         self.create_chain()
 
     def make_grp(self):
@@ -55,11 +26,11 @@ class AimChain(object):
         self.point_locators = []
         constraints = []
         for c in self.controls:
-            point_loc = self.make_locator(c, 'Point')
+            point_loc = aim_chain_controller.AimChainController.make_locator(c, 'Point')
             self.point_locators.append(point_loc)
             constraints.append(pm.parentConstraint(c, point_loc, mo=False))
             pm.parent(point_loc, self.POINT_GRP)
-        self.bake_result(self.point_locators)
+        aim_chain_controller.AimChainController.bake_result(self.point_locators)
         pm.delete(constraints)
 
     def create_pivot_locators(self):
@@ -67,23 +38,23 @@ class AimChain(object):
         self.upWorld_locators = []
         for index in xrange(len(self.controls)):
             if not index + 1 == len(self.controls):
-                pivot_loc = self.make_locator(self.controls[index], 'Pivot')
+                pivot_loc = aim_chain_controller.AimChainController.make_locator(self.controls[index], 'Pivot')
                 self.pivot_locators.append(pivot_loc)
                 pm.delete(pm.parentConstraint(self.controls[index], pivot_loc, mo=False))
 
-                upWorld_loc = self.make_locator(self.controls[index], 'UpWorld')
+                upWorld_loc = aim_chain_controller.AimChainController.make_locator(self.controls[index], 'UpWorld')
                 self.upWorld_locators.append(upWorld_loc)
                 pm.parent(upWorld_loc, pivot_loc)
                 pm.parent(pivot_loc, self.PIVOT_GRP)
 
                 upWorld_loc.t.set(0, 0, 0)
-                pm.setAttr('{}.t{}'.format(upWorld_loc, self.up_axis), 2)
+                pm.setAttr('{}.t{}'.format(upWorld_loc, self.aim_axis), 2)
 
     def create_aim_locators(self):
         self.aim_locators = []
         for index in xrange(len(self.controls)):
             if not index + 1 == len(self.controls):
-                aim_loc = self.make_locator(self.controls[index], 'Aim')
+                aim_loc = aim_chain_controller.AimChainController.make_locator(self.controls[index], 'Aim')
                 pm.pointConstraint(self.controls[index], aim_loc, mo=False)
 
                 self.aim_locators.append(aim_loc)
@@ -94,7 +65,7 @@ class AimChain(object):
             if not index + 1 == len(self.point_locators):
                 pm.pointConstraint(self.controls[index], self.pivot_locators[index])
                 pm.orientConstraint(self.point_locators[index], self.pivot_locators[index])
-                pm.orientConstraint(self.aim_locators[index], self.controls[index])
+                pm.orientConstraint(self.aim_locators[index], self.controls[index], mo=True)
                 pm.aimConstraint(self.point_locators[index + 1], self.aim_locators[index], mo=True,
                                  aimVector=(1, 0, 0), upVector=(0, 1, 0),
                                  worldUpType='object', worldUpObject=self.upWorld_locators[index])
@@ -105,11 +76,12 @@ class AimChain(object):
         self.pivot_grp.hide()
         self.aim_grp.hide()
 
+    def set_axis(self, axis):
+        self.aim_axis = [x for x in ['x', 'z', 'y'] if not x == axis.lower()][0]
+
     def create_chain(self):
-        self.controls = self.get_selected()
-        if self.controls:
-            self.make_grp()
-            self.create_point_locators()
-            self.create_pivot_locators()
-            self.create_aim_locators()
-            self.make_connections()
+        self.make_grp()
+        self.create_point_locators()
+        self.create_pivot_locators()
+        self.create_aim_locators()
+        self.make_connections()
