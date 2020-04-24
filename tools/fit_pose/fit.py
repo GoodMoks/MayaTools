@@ -2,7 +2,7 @@ import re
 from maya.OpenMaya import MGlobal
 import pymel.core as pm
 import MayaTools.core.connections as connections
-import MayaTools.core.dag as dag
+import MayaTools.core.base as base
 
 
 class FitObjects(object):
@@ -10,7 +10,7 @@ class FitObjects(object):
 
     @staticmethod
     def get_skinCluster(obj):
-        return dag.history(obj, type='skinCluster')
+        return base.get_history(obj, type='skinCluster')
 
     @staticmethod
     def get_index_common_connections(obj1, obj2, attr):
