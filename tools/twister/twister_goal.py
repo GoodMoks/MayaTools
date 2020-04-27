@@ -3,7 +3,7 @@ import MayaTools.core.connections as connections
 import MayaTools.core.constraint as constraint
 import MayaTools.core.attribute as attribute
 import MayaTools.core.transform as transform
-import MayaTools.core.particle as particle
+import MayaTools.core.utils as particle
 import MayaTools.core.vector as vector
 import MayaTools.core.dag as dag
 
