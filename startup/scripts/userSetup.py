@@ -12,7 +12,7 @@ def initialize():
     if tools_path not in sys.path:
         sys.path.append(tools_path)
 
-    import MayaTools.test_menu.menu as menu
+    import MayaTools.menus.Menu.menu as menu
     menu.create_menu()
 
 

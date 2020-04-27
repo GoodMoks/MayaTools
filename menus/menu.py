@@ -1,8 +1,10 @@
 import os
 import pymel.core as pm
-
+import MayaTools
 
 class Menu(object):
+    ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(MayaTools.__file__)))
+
     @staticmethod
     def get_parent_package_name(filepath):
         return os.path.basename(os.path.dirname(filepath))
@@ -19,7 +21,7 @@ class Menu(object):
     @staticmethod
     def install_item(items, parent):
         pm.setParent(parent, m=True)
-        for label, command, in items:
+        for label, command in items:
             if not command:
                 pm.menuItem(divider=True)
                 continue
@@ -48,19 +50,23 @@ class Menu(object):
 
         self.restore_menu(self.path)
 
+    def get_root_dir(self, path):
+        items = os.path.relpath(path, self.ROOT_DIR).split('\\')
+        return '.'.join(items)
+
     def restore_menu(self, path):
         name = self.get_main_package_name(path)
         if not self.name:
             self.name = name.capitalize()
 
         self.main_parent_dir = self.get_parent_package_name(path)
-        self.main_import_path = '{}.{}'.format(self.main_parent_dir, name)
+        self.main_import_path = self.get_root_dir(path)
         self.name = self.create(self.name)
         self.test_load_menu(path, self.main_import_path)
 
     def create_item(self, path, commands):
-        parent = self.get_parent_package_name(path)  # MayaTools
-        main = self.get_main_package_name(path)  # test_menu
+        parent = self.get_parent_package_name(path)
+        main = self.get_main_package_name(path)
         if parent == self.main_parent_dir:
             main = self.name
         self.parents[main.capitalize()] = self.install_menu(main.capitalize(), commands,
@@ -85,7 +91,8 @@ class Menu(object):
                     if f == "__init__.py":
                         try:
                             module = __import__(parent, globals(), locals(), ["*"], -1)
-                            self.create_item(path, module.commands)
+                            if hasattr(module, 'commands'):
+                                self.create_item(path, module.commands)
                         except:
                             pass
 
