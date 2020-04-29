@@ -1,4 +1,5 @@
 import pymel.core as pm
+import maya.cmds as cmds
 
 """ Module for work with attribute """
 
@@ -37,7 +38,7 @@ def unlock_attr(obj, attr):
         for a in attr:
             full_attr = '{}.{}'.format(o, a)
             try:
-                pm.setAttr(full_attr, l=False, k=True)
+                cmds.setAttr(full_attr, l=False, k=True)
             except:
                 pass
 

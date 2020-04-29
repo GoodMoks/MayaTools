@@ -1,4 +1,4 @@
-import pymel.core as pm
+import maya.cmds as cmds
 import MayaTools.core.attribute as attribute
 import MayaTools.core.connections as connections
 import MayaTools.core.layers as layers
@@ -32,14 +32,14 @@ class UnlockRig(object):
 
     @staticmethod
     def get_selected():
-        sel = pm.selected()
+        sel = cmds.ls(sl=True)
         if sel:
             return sel[0]
 
     @staticmethod
     def set_joint_draw_style(obj, state):
         try:
-            pm.setAttr(obj + '.drawStyle', state)
+            cmds.setAttr(obj + '.drawStyle', state)
         except:
             pass
 
@@ -49,23 +49,24 @@ class UnlockRig(object):
     def build(self):
         obj = self.get_selected()
         if obj:
-            child = pm.listRelatives(obj, ad=True)
+            child = cmds.listRelatives(obj, ad=True)
             if child:
                 child.append(obj)
                 for c in child:
                     try:
+                        print c
                         attribute.unlock_attr(child, self.MAIN_ATTR)
-                        connections.break_input_connections(child, attr='.visibility')
-                        layers.enabled_layer(child, 0)
-                        self.visibility_attr(c)
+                        # connections.break_input_connections(child, attr='.visibility')
+                        # layers.enabled_layer(child, 0)
+                        # self.visibility_attr(c)
                     except:
                         pass
 
-            pm.confirmDialog(title='Notification', message='DONE',
+            cmds.confirmDialog(title='Notification', message='DONE',
                              button=['OK'])
 
     def visibility_attr(self, obj):
-        shape = pm.listRelatives(obj, s=True)
+        shape = cmds.listRelatives(obj, s=True)
         if shape:
             for shape in shape:
                 obj.append(shape)
@@ -74,14 +75,14 @@ class UnlockRig(object):
             objects = list(obj)
 
         for o in objects:
-            if pm.objectType(o) == 'joint':
+            if cmds.objectType(o) == 'joint':
                 try:
-                    pm.setAttr(o + '.drawStyle', 0)
+                    cmds.setAttr(o + '.drawStyle', 0)
                 except:
                     pass
 
             for attr, value in self.SHAPE_ATTR.iteritems():
                 try:
-                    pm.setAttr('{}.{}'.format(o, attr), value)
+                    cmds.setAttr('{}.{}'.format(o, attr), value)
                 except:
                     pass
