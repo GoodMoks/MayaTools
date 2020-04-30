@@ -1,5 +1,4 @@
 import pymel.core as pm
-
 """
 Module for works with connections 
 """
@@ -60,3 +59,33 @@ def get_connections_cb(obj, plugs=False, channels=None):
             connections_dict[obj_attribute] = None
 
     return connections_dict
+
+def break_input_connections(obj, attr=None):
+    """ disconnect inputs connections
+
+    :param obj: 'str' object
+    :param channel: 'list' of attributes
+    """
+    con = pm.listConnections(obj, plugs=True, connections=True, destination=False)
+
+    if con:
+        for dest, source in con:
+            if attr:
+                for c in attr:
+                    full_attr = '{}.{}'.format(obj, c)
+                    if dest == full_attr:
+                        pm.disconnectAttr(source, dest)
+            else:
+                pm.disconnectAttr(source, dest)
+
+
+
+
+
+
+
+
+
+
+
+

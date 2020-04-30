@@ -1,6 +1,14 @@
 import pymel.core as pm
+import maya.cmds as cmds
 
 """ Module for work with attribute """
+
+main_attr = ['.tx', '.ty', '.tz',
+             '.rx', '.ry', '.rz',
+             '.sx', '.sy', '.sz',
+             '.visibility']
+
+
 
 def add_attr(obj, attr, dv=0.5, min=0.0, max=1.0, at='double', en=None):
     """ add attr to object
@@ -18,4 +26,20 @@ def add_attr(obj, attr, dv=0.5, min=0.0, max=1.0, at='double', en=None):
         pm.addAttr(obj, ln=attr, at=at, en=en, dv=dv, k=True, min=min, max=max)
         return True
     return False
+
+
+def unlock_attr(obj, attr):
+    """ Unlocks main attributes
+
+    :param obj: 'list' list of object
+    :param attr: 'list' attr to unlock
+    """
+    for o in obj:
+        for a in attr:
+            full_attr = '{}.{}'.format(o, a)
+            try:
+                cmds.setAttr(full_attr, l=False, k=True)
+            except:
+                pass
+
 
