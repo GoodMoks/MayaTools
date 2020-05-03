@@ -1,15 +1,15 @@
 import maya.cmds as cmds
 import MayaTools.core.attribute as attribute
+import MayaTools.core.utils as utils
 import MayaTools.core.connections as connections
 import MayaTools.core.layers as layers
 
 
-"""
-import MayaTools.tools.unlocker.unlock_rig as unlock
-reload(unlock)
-unlock.UnlockRig()
-"""
 
+
+
+
+@utils.time_info
 class UnlockRig(object):
     SHAPE_ATTR = {
         '.overrideEnabled': 1,
@@ -50,20 +50,29 @@ class UnlockRig(object):
         obj = self.get_selected()
         if obj:
             child = cmds.listRelatives(obj, ad=True)
+            print len(child)
             if child:
                 child.append(obj)
-                for c in child:
+                for index, c in enumerate(child):
                     try:
-                        print c
-                        attribute.unlock_attr(child, self.MAIN_ATTR)
-                        # connections.break_input_connections(child, attr='.visibility')
-                        # layers.enabled_layer(child, 0)
-                        # self.visibility_attr(c)
+                        attribute.unlock_attr(c, self.MAIN_ATTR)
+                    except:
+                        pass
+                    try:
+                        connections.break_input_connections(c, attr='.visibility')
+                    except:
+                        pass
+                    try:
+                        layers.enabled_layer(c, 0)
+                    except:
+                        pass
+                    try:
+                        self.visibility_attr(c)
                     except:
                         pass
 
             cmds.confirmDialog(title='Notification', message='DONE',
-                             button=['OK'])
+                               button=['OK'])
 
     def visibility_attr(self, obj):
         shape = cmds.listRelatives(obj, s=True)
