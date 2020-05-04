@@ -1,5 +1,6 @@
-import maya.OpenMaya as om
-import pymel.core as pm
+import maya.api.OpenMaya as om2
+import maya.cmds as cmds
+
 
 ''' base functions, api functions'''
 
@@ -10,11 +11,8 @@ def get_MObject(object):
     :param object: 'str' object
     :return: MObject
     """
-    selectionList = om.MSelectionList()
-    om.MGlobal.getSelectionListByName(object, selectionList)
-    mObject = om.MObject()
-    selectionList.getDependNode(0, mObject)
-    return mObject
+    selectionList = om2.MGlobal.getSelectionListByName(object)
+    return selectionList.getDependNode(0)
 
 
 def get_history(node, type=None):
@@ -24,11 +22,11 @@ def get_history(node, type=None):
     :param type: 'str' type of object
     :return: 'list' with objects or []
     """
-    history = pm.listHistory(node)
+    history = cmds.listHistory(node)
     if not type:
         return history
 
-    return [n for n in history if pm.nodeType(n) == type]
+    return [n for n in history if cmds.nodeType(n) == type]
 
 
 def isShape(obj):
@@ -38,11 +36,10 @@ def isShape(obj):
     :return: 'boot' True if object is shape
     """
     mObject = get_MObject(obj)
-    if not mObject.hasFn(om.MFn.kShape):
+    if not mObject.hasFn(om2.MFn.kShape):
         return False
 
     return True
-
 
 def get_instances():
     """ get all instance object in the scene
@@ -50,27 +47,41 @@ def get_instances():
     :return: 'list' with instances or []
     """
     instances = []
-    iterDag = om.MItDag(om.MItDag.kBreadthFirst)
+    iterDag = om2.MItDag(om2.MItDag.kBreadthFirst)
     while not iterDag.isDone():
-        instanced = om.MItDag.isInstanced(iterDag)
+        instanced = om2.MItDag.isInstanced(iterDag)
         if instanced:
             instances.append(iterDag.fullPathName())
         iterDag.next()
     return instances
 
 
+def get_instances_test():
+    """ get all instance object in the scene
+
+    :return: 'list' with instances or []
+    """
+    instances = []
+    iterDag = om2.MItDag(om2.MItDag.kBreadthFirst)
+    while not iterDag.isDone():
+        instanced = om2.MItDag.isInstanced(iterDag)
+        if instanced:
+            instances.append(iterDag.fullPathName())
+        iterDag.next()
+    return instances
+
 def get_object_with_attr(obj_type, attr):
     """ get objects who has given attr
 
-    :param obj_type: 'om.MFn.kLocator'
+    :param obj_type: 'om2.MFn.kLocator'
     :param attr: 'str' name of attr
     :return: 'list' with objects
     """
     instances = []
-    iterDag = om.MItDag(om.MItDag.kDepthFirst, obj_type)
+    iterDag = om2.MItDag(om2.MItDag.kDepthFirst, obj_type)
     while not iterDag.isDone():
         m_object = iterDag.currentItem()
-        m_objFn = om.MFnDependencyNode(m_object)
+        m_objFn = om2.MFnDependencyNode(m_object)
         if m_objFn.hasAttribute(attr):
             instances.append(iterDag.fullPathName())
         iterDag.next()

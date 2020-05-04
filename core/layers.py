@@ -1,4 +1,4 @@
-import pymel.core as pm
+import maya.cmds as cmds
 
 def enabled_layer(obj, state):
     """ Enabled all layers

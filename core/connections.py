@@ -1,4 +1,5 @@
-import pymel.core as pm
+import maya.cmds as cmds
+
 """
 Module for works with connections 
 """
@@ -18,11 +19,26 @@ def get_common_connections(obj1, obj2, attr=None):
     obj = obj1
     if attr:
         obj = '{}.{}'.format(obj1, attr)
-    connections = pm.listConnections(obj, d=True, p=True)
+    connections = cmds.listConnections(obj, d=True, p=True)
     if not connections:
         return None
 
     return [con.split('.')[1] for con in connections if con.split('.')[0] == obj2]
+
+
+def get_input_connections_pairs(obj):
+    inputs = []
+    input_connections = cmds.listConnections(obj, c=True, s=True, d=False, p=True)
+    if input_connections:
+        inputs.extend(zip(input_connections[::2], input_connections[1::2]))
+    return inputs
+
+def get_output_connections_pairs(obj):
+    output = []
+    output_connections_ = cmds.listConnections(obj, c=True, s=False, d=True, p=True)
+    if output_connections_:
+        output.extend(zip(output_connections_[::2], output_connections_[1::2]))
+    return output
 
 
 def disconnect_objects(first, second, channels=None):
@@ -32,14 +48,14 @@ def disconnect_objects(first, second, channels=None):
     :param second: 'str' second object
     :param channels: 'list' channels for delete connections
     """
-    con = pm.listConnections(first, plugs=True, connections=True, destination=False)
+    con = cmds.listConnections(first, plugs=True, connections=True, destination=False)
     for first_connections, second_connections in con:
         if second_connections.split('.')[0] == second:
             if channels:
-                if first_connections.shortName(fullPath=False) in channels:
-                    pm.disconnectAttr(second_connections, first_connections)
+                if first_connections.split('.')[1] in channels:
+                    cmds.disconnectAttr(second_connections, first_connections)
             else:
-                pm.disconnectAttr(second_connections, first_connections)
+                cmds.disconnectAttr(second_connections, first_connections)
 
 
 def get_connections_cb(obj, plugs=False, channels=None):
@@ -52,7 +68,7 @@ def get_connections_cb(obj, plugs=False, channels=None):
     connections_dict = dict()
     for channel in channel_list:
         obj_attribute = '{}.{}'.format(obj, channel)
-        inputs = pm.listConnections(obj_attribute, d=True, p=True)
+        inputs = cmds.listConnections(obj_attribute, d=True, p=True)
         if inputs:
             connections_dict[obj_attribute] = inputs[0] if plugs else inputs[0].split('.')[0]
         else:
@@ -66,7 +82,7 @@ def break_input_connections(obj, attr=None):
     :param obj: 'str' object
     :param channel: 'list' of attributes
     """
-    con = pm.listConnections(obj, plugs=True, connections=True, destination=False)
+    con = get_input_connections_pairs(obj)
 
     if con:
         for dest, source in con:
@@ -74,9 +90,9 @@ def break_input_connections(obj, attr=None):
                 for c in attr:
                     full_attr = '{}.{}'.format(obj, c)
                     if dest == full_attr:
-                        pm.disconnectAttr(source, dest)
+                        cmds.disconnectAttr(source, dest)
             else:
-                pm.disconnectAttr(source, dest)
+                cmds.disconnectAttr(source, dest)
 
 
 
