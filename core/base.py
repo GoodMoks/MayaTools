@@ -1,4 +1,5 @@
 import maya.api.OpenMaya as om2
+import maya.OpenMaya as om
 import maya.cmds as cmds
 
 
