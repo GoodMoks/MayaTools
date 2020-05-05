@@ -1,4 +1,4 @@
-import pymel.core as pm
+import maya.cmds as cmds
 import maya.OpenMaya as om
 
 
@@ -8,7 +8,7 @@ class MirrorCtrl(object):
     @staticmethod
     def rename(name, orig, replace):
         new_name = name.replace('{}_'.format(orig), '{}_'.format(replace))[:-1]
-        name = pm.rename(name, new_name)
+        name = cmds.rename(name, new_name)
 
         return name
 
@@ -25,69 +25,62 @@ class MirrorCtrl(object):
         self.runner()
 
     def get_sel(self):
-        obj = pm.selected()
+        obj = cmds.ls(sl=True)
         if not obj:
             om.MGlobal.displayError('Nothing is currently selected')
             return
 
-        self.obj = obj
+        return obj
 
-    def duplicate(self):
-        duplicate_selected = pm.duplicate(self.obj)[0]
-        print self.orig
-        print self.replace
-        self.duplicate_selected = self.rename(duplicate_selected, orig=self.orig, replace=self.replace)
+    def duplicate(self, obj):
+        duplicate_selected = cmds.duplicate(obj)[0]
+        return self.rename(duplicate_selected, orig=self.orig, replace=self.replace)
 
-    def mirror(self):
-        pm.select(d=True)
+    def mirror(self, obj):
+        cmds.select(d=True)
         # grp = pm.group(w=True, em=True)
-        grp = pm.createNode('transform')
-        pm.parent(self.duplicate_selected, grp)
+        grp = cmds.createNode('transform')
+        cmds.parent(obj, grp)
 
         if self.x_axis_checkbox:
-            pm.setAttr('{}.sx'.format(grp), -1)
+            cmds.setAttr('{}.sx'.format(grp), -1)
 
         if self.y_axis_checkbox:
-            pm.setAttr('{}.sy'.format(grp), -1)
+            cmds.setAttr('{}.sy'.format(grp), -1)
 
         if self.z_axis_checkbox:
-            pm.setAttr('{}.sz'.format(grp), -1)
+            cmds.setAttr('{}.sz'.format(grp), -1)
 
-        pm.parent(self.duplicate_selected, w=True)
-        pm.delete(grp)
+        cmds.parent(obj, w=True)
+        cmds.delete(grp)
 
-    def zero_out(self):
-        duplicate_selected = pm.selected()
-
-        for d in duplicate_selected:
-            obj = d
-            # Create null group
-            position_grp = pm.createNode('transform', n=obj + '_POS')
-            constraint_grp = pm.createNode('transform', n=obj + '_CON')
-            # Query all transform
-            translate = pm.xform(obj, q=True, t=True, ws=True)
-            rotate = pm.xform(obj, q=True, ro=True, ws=True)
-            scale = pm.xform(obj, q=True, s=True, ws=True)
-            # Parent null groups
-            group_to_parent = pm.parent(constraint_grp, position_grp)[0]
-            xform_grp = obj + '_POS'
-            # Set transform on main position group
-            pm.xform(xform_grp, t=translate, ws=True)
-            pm.xform(xform_grp, ro=rotate, ws=True)
-            pm.xform(xform_grp, s=scale, ws=True)
-            # Parent object to group
-            pm.parent(obj, group_to_parent)
-            if self.preserve_orient:
-                pm.setAttr('{}.rotateY'.format(position_grp), 0)
-                pm.setAttr('{}.sz'.format(position_grp), 1)
-
+    def zero_out(self, obj):
+        # Create null group
+        position_grp = cmds.createNode('transform', n=obj + '_POS')
+        constraint_grp = cmds.createNode('transform', n=obj + '_CON')
+        # Query all transform
+        translate = cmds.xform(obj, q=True, t=True, ws=True)
+        rotate = cmds.xform(obj, q=True, ro=True, ws=True)
+        scale = cmds.xform(obj, q=True, s=True, ws=True)
+        # Parent null groups
+        group_to_parent = cmds.parent(constraint_grp, position_grp)[0]
+        xform_grp = obj + '_POS'
+        # Set transform on main position group
+        cmds.xform(xform_grp, t=translate, ws=True)
+        cmds.xform(xform_grp, ro=rotate, ws=True)
+        cmds.xform(xform_grp, s=scale, ws=True)
+        # Parent object to group
+        cmds.parent(obj, group_to_parent)
+        if self.preserve_orient:
+            cmds.setAttr('{}.rotateY'.format(position_grp), 0)
+            cmds.setAttr('{}.sz'.format(position_grp), 1)
 
     def runner(self):
         if not self.obj:
-            self.get_sel()
+            self.obj = self.get_sel()
 
         if self.obj:
             for o in self.obj:
-                self.duplicate()
-                self.mirror()
-                self.zero_out()
+                duplicated = self.duplicate(o)
+                self.mirror(duplicated)
+                self.zero_out(duplicated)

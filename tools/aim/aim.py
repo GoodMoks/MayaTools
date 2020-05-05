@@ -1,5 +1,4 @@
 import maya.OpenMaya as om
-import pymel.core as pm
 import math
 
 
