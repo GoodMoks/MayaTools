@@ -22,7 +22,7 @@ if __name__ == '__main__':
     ''' base '''
     get_MObject()
     get_history()
-    isShape()
+    is_shape()
     get_instances()
 
     ''' connections '''

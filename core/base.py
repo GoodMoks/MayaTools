@@ -1,18 +1,24 @@
 import maya.api.OpenMaya as om2
 import maya.cmds as cmds
 
-
 ''' base functions, api functions'''
 
 
-def get_MObject(object):
+def get_MObject(obj):
     """ get MObject for given object
 
     :param object: 'str' object
     :return: MObject
     """
-    selectionList = om2.MGlobal.getSelectionListByName(object)
+    selectionList = om2.MGlobal.getSelectionListByName(obj)
     return selectionList.getDependNode(0)
+
+
+def get_dagPath(obj):
+    m_obj = get_MObject(obj)
+    if m_obj.hasFn(om2.MFn.kDagNode):
+        m_dagPath = om2.MDagPath.getAPathTo(m_obj)
+        return m_dagPath
 
 
 def get_history(node, type=None):
@@ -29,7 +35,7 @@ def get_history(node, type=None):
     return [n for n in history if cmds.nodeType(n) == type]
 
 
-def isShape(obj):
+def is_shape(obj):
     """ check if the given object is a shape node
 
     :param obj: 'str' object
@@ -40,6 +46,7 @@ def isShape(obj):
         return False
 
     return True
+
 
 def get_instances():
     """ get all instance object in the scene
@@ -69,6 +76,7 @@ def get_instances_test():
             instances.append(iterDag.fullPathName())
         iterDag.next()
     return instances
+
 
 def get_object_with_attr(obj_type, attr):
     """ get objects who has given attr

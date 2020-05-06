@@ -14,7 +14,7 @@ def get_children(obj, all=False, shapes=False):
     child = cmds.listRelatives(obj, c=True, ad=all)
     if child:
         if not shapes:
-            return [c for c in child if not base.isShape(c)]
+            return [c for c in child if not base.is_shape(c)]
         return child
 
 def get_shapes(obj):
