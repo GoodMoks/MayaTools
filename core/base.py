@@ -28,7 +28,11 @@ def get_history(node, type=None):
     :param type: 'str' type of object
     :return: 'list' with objects or []
     """
-    history = cmds.listHistory(node)
+    try:
+        history = cmds.listHistory(node)
+    except:
+        return None
+
     if not type:
         return history
 
