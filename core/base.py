@@ -1,4 +1,5 @@
 import maya.api.OpenMaya as om2
+import maya.OpenMaya as om
 import maya.cmds as cmds
 
 ''' base functions, api functions'''
@@ -115,3 +116,16 @@ def is_pymel(obj):
         except AttributeError:
             return False
     return module.startswith('pymel')
+
+
+def get_dag_path(obj):
+    """ get dag path of given object
+
+    :param obj: object
+    :return: dag path
+    """
+    dag_path = om.MDagPath()
+    sel = om.MSelectionList()
+    sel.add(str(obj))
+    sel.getDagPath(0, dag_path)
+    return dag_path

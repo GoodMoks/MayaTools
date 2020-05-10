@@ -1,6 +1,8 @@
 import pymel.core as pm
+import maya.OpenMaya as om
 
 """ Module for work with transform """
+
 
 def align_transform(source, target, t=True, ro=True):
     """ align transform constraint method
@@ -17,5 +19,12 @@ def align_transform(source, target, t=True, ro=True):
         pm.delete(pm.orientConstraint(source, target, mo=False))
 
 
+def get_rotate_pivot(obj):
+    """ get world space position of rotate pivot method
 
-
+    :param obj: dag path
+    :return: MVector
+    """
+    transform_fn = om.MFnTransform(obj)
+    rotate_pivot = transform_fn.rotatePivot(om.MSpace.kWorld)
+    return om.MVector(rotate_pivot.x, rotate_pivot.y, rotate_pivot.z)

@@ -1,11 +1,11 @@
-import pymel.core as pm
+import maya.cmds as cmds
 import maya.OpenMaya as om
 
 
 class Aligner(object):
     @staticmethod
     def get_matrix(obj):
-        return pm.xform(obj, ws=True, q=True, m=True)
+        return cmds.xform(obj, ws=True, q=True, m=True)
 
     @staticmethod
     def matrix_to_list(in_matrix):
@@ -50,7 +50,7 @@ class Aligner(object):
     def align(self):
 
         # get selection
-        selected = pm.selected()
+        selected = cmds.ls(sl=True)
 
         if not selected:
             om.MGlobal.displayError('Nothing is currently selected')
@@ -116,5 +116,5 @@ class Aligner(object):
             result_matrix = self.matrix_to_list(m4)
 
             # set object to wright place
-            pm.xform(s, ws=True, m=tuple(result_matrix))
-            pm.xform(s, sh=(0.0, 0.0, 0.0))
+            cmds.xform(s, ws=True, m=tuple(result_matrix))
+            cmds.xform(s, sh=(0.0, 0.0, 0.0))
