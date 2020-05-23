@@ -117,23 +117,25 @@ class InstanceShapeUI(QtWidgets.QDialog):
         if items:
             self.controller.delete_instance(items)
             self.update_instance()
+            self.object_list_wdg.clear()
 
     def add_object(self):
         """ add instance to selected objects """
         instance = self.instance_list_wdg.selectedItems()
         if instance:
             instance = instance[-1].text()
-            pm.select(cl=True)
             selected_objects = self.controller.get_selected()
             if selected_objects:
                 self.controller.add_instance(selected_objects, instance)
                 self.update_object(self.instance_list_wdg.selectedItems()[-1])
             pm.select(instance)
+
+
     def delete_object(self):
         """ delete instance from object """
         objects = self.object_list_wdg.selectedItems()
         instance = self.instance_list_wdg.selectedItems()
-        if instance:
+        if instance and objects:
             instance = instance[-1].text()
             self.controller.delete_object(objects, instance)
             self.update_object(self.instance_list_wdg.selectedItems()[-1])
@@ -179,6 +181,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
                 self.item_object_click()
             else:
                 pm.select(cl=True)
+                self.object_list_wdg.clear()
 
     def item_object_click(self, *args):
         """ select object in scene """
