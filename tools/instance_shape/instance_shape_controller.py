@@ -29,7 +29,7 @@ class InstanceShapeController(object):
     def get_full_path(instance):
         objects = pm.ls(instance, ap=True)
         if len(objects) == 1:
-            parent = dag.get_parent(objects[0])
+            parent = dag.get_parent('{}'.format(objects[0]))
             if parent:
                 return ['{}|{}'.format(parent[0], instance)]
         return objects
@@ -50,7 +50,7 @@ class InstanceShapeController(object):
 
     @staticmethod
     def get_shapes_instance(obj):
-        return [x.split('|')[-1] for x in dag.get_shapes(obj)]
+        return [x.split('|')[-1] for x in dag.get_shapes('{}'.format(obj))]
 
     def __init__(self):
         pass
@@ -73,4 +73,4 @@ class InstanceShapeController(object):
     def add_instance(self, objects, instance):
         for obj in objects:
             if instance not in self.get_shapes_instance(obj):
-                Instance(obj, instance)
+                instance_shape.Instance(obj, instance)

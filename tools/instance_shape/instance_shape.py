@@ -1,4 +1,6 @@
 import pymel.core as pm
+import maya.api.OpenMaya as om2
+
 
 class Instance:
     def __init__(self, obj, instance):
@@ -29,7 +31,7 @@ class InstanceShape:
             self.objects = list(self.objects)
 
         if pm.objExists(self.shape_name):
-            om.MGlobal.displayError('Shape "{}" already exist'.format(self.shape_name))
+            om2.MGlobal.displayError('Shape "{}" already exist'.format(self.shape_name))
             return
 
         self.create_main_instance()
