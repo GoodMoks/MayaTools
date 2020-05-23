@@ -16,6 +16,11 @@ def get_MObject(obj):
 
 
 def get_dagPath(obj):
+    """ get dag path of given object API 2.0
+
+        :param obj: object
+        :return: dag path
+    """
     m_obj = get_MObject(obj)
     if m_obj.hasFn(om2.MFn.kDagNode):
         m_dagPath = om2.MDagPath.getAPathTo(m_obj)

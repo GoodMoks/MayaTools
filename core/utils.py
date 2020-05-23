@@ -49,3 +49,16 @@ def time_info(func):
         return result
 
     return timeRun
+
+
+def create_follicle(name):
+    """ create follicle
+    :param name: 'str' name for follicle
+    :return: (follicle, follicle_shape)
+    """
+    follicle = cmds.createNode('transform', n=name)
+    follicle_shape = cmds.createNode('follicle', n='{}Shape'.format(follicle), p=follicle)
+    cmds.connectAttr('{}.outTranslate'.format(follicle_shape), '{}.translate'.format(follicle))
+    cmds.connectAttr('{}.outRotate'.format(follicle_shape), '{}.rotate'.format(follicle))
+    cmds.setAttr('{}.inheritsTransform'.format(follicle), 0)
+    return follicle, follicle_shape
