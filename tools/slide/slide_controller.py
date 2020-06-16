@@ -1,21 +1,22 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
+import MayaTools.tools.slide.slide as slide
 import MayaTools.core.curve as curve
 import MayaTools.tools.rivet.new_rivet as rivet
 import MayaTools.core.utils as utils
 
 reload(utils)
 reload(rivet)
-
+reload(slide)
 reload(curve)
 
 
-class SlideSurface(object):
-    def __init__(self):
-        self.surface = self.get_selected()
-        self.fraction = True
 
-        self.slide_controller = SlideController()
+
+class SlideSurface(object): #WIP
+    def __init__(self, surface, fraction):
+        self.surface = surface
+        self.fraction = fraction
 
         self.build()
 
@@ -35,13 +36,13 @@ class SlideSurface(object):
         cmds.setAttr('{}.isoparmValue'.format(self.curve_iso_node), value)
 
     def create_slide_curve(self):
-        self.slide = curve.SlideCurve(self.curve_iso)
+        self.slide = slide.SlideCurve(self.curve_iso)
         self.slide.create()
 
     def create_item(self):
-        value = self.slide_controller.get_value_range(6, 1)
+        value = utils.get_value_range(6, 1)
         for number, v in enumerate(value):
-            item = SlideItem(curve=self.curve_iso, parameter=v, prefix=number)
+            item = slide.SlideItem(curve=self.curve_iso, parameter=v, prefix=str(number))
             r = rivet.RivetMatrix(item.driven, self.surface, normalize=False)
             closest_point = cmds.createNode('closestPointOnSurface')
             cmds.connectAttr('{}.worldSpace'.format(self.surface), '{}.inputSurface'.format(closest_point))
@@ -57,28 +58,32 @@ class SlideSurface(object):
         self.create_item()
 
 
-class MakeSlide(object):
+class MakeSlide(object): # WIP
     def __init__(self, curve):
         self.curve = curve
 
         self.build()
 
     def create_slide_curve(self):
-        self.slide = curve.SlideCurve(self.curve)
+        self.slide = slide.SlideCurve(self.curve)
         self.slide.create()
 
     def create_item(self):
         value = utils.get_value_range(7, 1)
         for number, v in enumerate(value):
-            item = curve.SlideItem(curve=self.curve, parameter=v, prefix=str(number))
+            item = slide.SlideItem(curve=self.curve, parameter=v, prefix=str(number))
             self.slide.set_item(item)
+
+    def create_driven_curve(self):
+        self.driven_curve = slide.DrivenSlideCurve('curve_driven', False)
+        self.slide.set_driven_curve(self.driven_curve)
 
     def build(self):
         print 'build'
 
         self.create_slide_curve()
-        self.create_item()
+        self.create_driven_curve()
+        #self.create_item()
         #self.slide.set_global_scale_ctrl('curve1_CTRL', 'scaleX')
-
 
 
