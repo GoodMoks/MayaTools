@@ -3,17 +3,21 @@ from PySide2 import QtCore
 import pymel.core as pm
 import maya.OpenMaya as om
 import MayaTools.core.base as base
+import MayaTools.core.attribute as attribute
 import instance_shape_controller
 import instance_shape
 
+reload(base)
+reload(instance_shape_controller)
+
 class InstanceShapeUI(QtWidgets.QDialog):
     WINDOW_INSTANCE = None
-    MAYA = maya_window = pm.ui.PyUI('MayaWindow').asQtObject()
+    MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
 
     def __init__(self, parent=MAYA):
         super(InstanceShapeUI, self).__init__(parent)
 
-        self.setWindowTitle('Instance Attribute')
+        self.setWindowTitle('Instance Shape')
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setBaseSize(400, 250)
 
@@ -52,8 +56,8 @@ class InstanceShapeUI(QtWidgets.QDialog):
 
     def create_layout(self):
         # Main layout
-        self.main_h_ly = QtWidgets.QVBoxLayout(self)
-        self.main_h_ly.setMargin(5)
+        self.main_v_ly = QtWidgets.QVBoxLayout(self)
+        self.main_v_ly.setMargin(5)
 
         # List Widget Layout
         self.instance_base_ly = QtWidgets.QVBoxLayout()
@@ -65,7 +69,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
         self.items_wdg_ly = QtWidgets.QHBoxLayout()
 
     def add_to_layout(self):
-        self.main_h_ly.addLayout(self.items_wdg_ly)
+        self.main_v_ly.addLayout(self.items_wdg_ly)
 
         self.instance_base_wdg.setLayout(self.instance_base_ly)
         self.object_base_wdg.setLayout(self.object_base_ly)
@@ -108,7 +112,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
 
     def add_instance(self):
         """ add instance """
-        self.controller.make_instance()
+        self.controller.make_instance(self)
         self.update_instance()
 
     def delete_instance(self):
@@ -128,7 +132,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
             if selected_objects:
                 self.controller.add_instance(selected_objects, instance)
                 self.update_object(self.instance_list_wdg.selectedItems()[-1])
-            pm.select(instance)
+                pm.select(instance)
 
 
     def delete_object(self):
@@ -136,18 +140,17 @@ class InstanceShapeUI(QtWidgets.QDialog):
         objects = self.object_list_wdg.selectedItems()
         instance = self.instance_list_wdg.selectedItems()
         if instance and objects:
-            instance = instance[-1].text()
-            self.controller.delete_object(objects, instance)
-            self.update_object(self.instance_list_wdg.selectedItems()[-1])
-            if len(self.controller.get_full_path(instance)) < 2:
+            instance_name = instance[-1].text()
+            self.controller.delete_object(objects, instance_name)
+            self.update_object(instance[-1])
+            if not len(self.controller.get_full_path(instance_name)):
                 self.update_instance()
 
     def update_instance(self):
         """ update instance list widget """
-        instances_attr = base.get_object_with_attr(om.MFn.kLocator, instance_shape.InstanceShape.ATTR_NAME)
-        instances = base.get_instances()
-
-        instances = instances_attr + instances
+        all_instances = base.get_objects_with_attr(om.MFn.kLocator, instance_shape.InstanceShape.ATTR_NAME)
+        instances_shape = base.get_instances()
+        instances = all_instances + instances_shape
         if instances:
             self.instance_list_wdg.clear()
             for instance in instances:
@@ -155,6 +158,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
                 if not self.check_item(self.instance_list_wdg, instance_item):
                     item = QtWidgets.QListWidgetItem(instance_item)
                     self.instance_list_wdg.addItem(item)
+
         else:
             self.instance_list_wdg.clear()
 
@@ -165,7 +169,7 @@ class InstanceShapeUI(QtWidgets.QDialog):
         self.object_list_wdg.clear()
         all_objects = self.controller.get_full_path(instance.text())
         for obj in all_objects:
-            object_name = obj.split('|')[0]
+            object_name = obj.split('|{}'.format(instance.text()))[0]
             item = QtWidgets.QListWidgetItem(object_name)
             self.object_list_wdg.addItem(item)
 
@@ -178,7 +182,9 @@ class InstanceShapeUI(QtWidgets.QDialog):
             self.controller.select_item(selected_instance)
         else:
             if selected_objects:
-                self.item_object_click()
+                #self.item_object_click()
+                pm.select(cl=True)
+                self.object_list_wdg.clear()
             else:
                 pm.select(cl=True)
                 self.object_list_wdg.clear()

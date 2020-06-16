@@ -1,7 +1,8 @@
 import maya.cmds as cmds
 import MayaTools.core.base as base
 import maya.api.OpenMaya as om2
-
+import MayaTools.core.attribute as attribute
+reload(attribute)
 
 def merge_cv(surface=None, controls=None):  # WIP
     """ Merge to one neighborhoods cv's
@@ -34,8 +35,8 @@ def get_closest_UV_surface(surface, point, normalize=True):
     :return:
     """
     new_surface = cmds.duplicate(surface)[0]
+    attribute.unlock_attr(new_surface, attribute.main_attr)
     cmds.makeIdentity(new_surface, apply=True)
-
     surface_dag_path = base.get_dagPath(new_surface)
     surface_fn = om2.MFnNurbsSurface(surface_dag_path)
     point = om2.MPoint(point)

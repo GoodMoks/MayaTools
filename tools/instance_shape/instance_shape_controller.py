@@ -1,8 +1,9 @@
 import pymel.core as pm
 import maya.OpenMaya as om
 import MayaTools.core.dag as dag
-
+import MayaTools.core.attribute as attribute
 import instance_shape
+from PySide2 import QtWidgets
 
 
 class InstanceShapeController(object):
@@ -24,6 +25,7 @@ class InstanceShapeController(object):
             return None
 
         return input
+
 
     @staticmethod
     def get_full_path(instance):
@@ -55,14 +57,13 @@ class InstanceShapeController(object):
     def __init__(self):
         pass
 
-    def make_instance(self):
+    def make_instance(self, parent):
         selected = self.get_selected()
         if selected:
-            name = self.input_shape_name()
-            if not name:
-                return
-
-            instance_shape.InstanceShape(selected, name)
+            name, ok = QtWidgets.QInputDialog().getText(parent, "Input Name",
+                                                        "Instance Name:", QtWidgets.QLineEdit.Normal)
+            if name and ok:
+                instance_shape.InstanceShape(selected, name)
 
     def delete_object(self, objects, instance):
         for obj in objects:
@@ -72,5 +73,14 @@ class InstanceShapeController(object):
 
     def add_instance(self, objects, instance):
         for obj in objects:
-            if instance not in self.get_shapes_instance(obj):
-                instance_shape.Instance(obj, instance)
+            obj_instance = obj.split('|')
+            if len(obj_instance) > 1:
+                obj_instance = obj_instance[1]
+
+            if not obj_instance == instance:
+                shapes = self.get_shapes_instance(obj)
+                if instance not in shapes:
+                    if not attribute.has_attr(str(obj), instance_shape.InstanceShape.ATTR_NAME):
+                        pm.undoInfo(openChunk=True)
+                        instance_shape.Instance(obj, instance)
+                        pm.undoInfo(closeChunk=True)

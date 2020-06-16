@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
+import MayaTools.core.attribute as attribute
 import re
 
 
@@ -83,6 +84,7 @@ def get_closest_UV_mesh(mesh, point):
     :return:
     """
     new_mesh = cmds.duplicate(mesh)[0]
+    attribute.unlock_attr(new_mesh, attribute.main_attr)
     cmds.makeIdentity(mesh, apply=True)
     surface_dag_path = base.get_dagPath(new_mesh)
     surface_fn = om2.MFnMesh(surface_dag_path)

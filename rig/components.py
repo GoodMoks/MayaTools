@@ -81,9 +81,3 @@ def twist_ext(control=None, axis='Y', destination=None):
             cmds.connectAttr('{}.output'.format(mult_node), '{}.rotate{}'.format(destination, axis))
 
         cmds.select(twist_grp)
-
-
-
-
-
-

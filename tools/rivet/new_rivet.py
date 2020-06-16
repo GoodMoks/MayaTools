@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 import MayaTools.core.utils as utils
 import MayaTools.core.mesh as mesh
-import MayaTools.core.surface as surface_utils
+import MayaTools.core.surface as surface
 import MayaTools.core.curve as curve
 
 reload(curve)
 reload(mesh)
-
+reload(surface)
 
 class RivetFollicle(object):
     def __init__(self, obj, surface):
@@ -25,13 +25,17 @@ class RivetFollicle(object):
         self.follicle, self.shape = utils.create_follicle(self.name)
         try:
             cmds.connectAttr('{}.outMesh'.format(self.surface), '{}.inputMesh'.format(self.shape))
+            self.param = mesh.get_closest_UV_mesh(self.surface, cmds.xform(self.obj, q=True, ws=True, rp=True))
         except:
             cmds.connectAttr('{}.local'.format(self.surface), '{}.inputSurface'.format(self.shape))
+            self.param = surface.get_closest_UV_surface(self.surface, cmds.xform(self.obj, q=True, ws=True, rp=True))
 
         cmds.connectAttr('{}.worldMatrix'.format(self.surface), '{}.inputWorldMatrix'.format(self.shape))
-        self.param = mesh.get_closest_UV_mesh(self.surface, cmds.xform(self.obj, q=True, ws=True, rp=True))
+
         cmds.setAttr('{}.parameterU'.format(self.shape), self.param[0])
         cmds.setAttr('{}.parameterV'.format(self.shape), self.param[1])
+
+
 
 
 class RivetMatrix(object):
@@ -40,7 +44,7 @@ class RivetMatrix(object):
         self.surface = surface
         self.normalize = normalize
 
-        self.pos_nod = None
+        self.pos_node = None
         self.four_node = None
         self.dec_node = None
         self.param = None
@@ -53,7 +57,7 @@ class RivetMatrix(object):
         self.dec_node = cmds.createNode('decomposeMatrix', n='{}_dec_node'.format(self.obj))
 
         cmds.connectAttr('{}.worldSpace'.format(self.surface), '{}.inputSurface'.format(self.pos_node))
-        self.param = surface_utils.get_closest_UV_surface(self.surface, cmds.xform(self.obj, q=True, ws=True, rp=True))
+        self.param = surface.get_closest_UV_surface(self.surface, cmds.xform(self.obj, q=True, ws=True, rp=True))
         cmds.setAttr('{}.parameterU'.format(self.pos_node), self.param[0])
         cmds.setAttr('{}.parameterV'.format(self.pos_node), self.param[1])
 

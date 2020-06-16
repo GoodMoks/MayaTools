@@ -88,7 +88,7 @@ def get_instances_test():
     return instances
 
 
-def get_object_with_attr(obj_type, attr):
+def get_objects_with_attr(obj_type, attr):
     """ get objects who has given attr
 
     :param obj_type: 'om2.MFn.kLocator'
@@ -104,7 +104,6 @@ def get_object_with_attr(obj_type, attr):
             instances.append(iterDag.fullPathName())
         iterDag.next()
     return instances
-
 
 def is_pymel(obj):
     """ check is pymel object

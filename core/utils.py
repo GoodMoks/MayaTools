@@ -62,3 +62,10 @@ def create_follicle(name):
     cmds.connectAttr('{}.outRotate'.format(follicle_shape), '{}.rotate'.format(follicle))
     cmds.setAttr('{}.inheritsTransform'.format(follicle), 0)
     return follicle, follicle_shape
+
+
+
+def get_value_range(count, max=1):
+    coefficient = max / float(count - max)
+
+    return [round(x * coefficient, 5) for x in xrange(count)]
