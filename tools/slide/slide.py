@@ -1,7 +1,10 @@
 import maya.cmds as cmds
 import MayaTools.core.utils as utils
+import MayaTools.core.curve as curve
 
+reload(curve)
 reload(utils)
+
 
 class SlideCurve(object):
     """ Creates a slide system for a curve
@@ -35,7 +38,6 @@ class SlideCurve(object):
     def set_global_scale_ctrl(self, obj, attr):
         cmds.setAttr('{}.operation'.format(self.scale_mult), 2)
         cmds.connectAttr('{}.{}'.format(obj, attr), '{}.input2X'.format(self.scale_mult))
-
 
     def add_slide_attr(self):
         try:
@@ -120,8 +122,63 @@ class SlideCurve(object):
             cmds.connectAttr('{}.Position'.format(self.control), '{}.inputB'.format(curve.blend_nodes[index]))
 
 
+class SlideItem(object):
+    """ Creates a slide item
+
+        Args:
+            curve (str): name of nurbs curve
+            parameter (float): value for position node on curve
+            prefix (str): prefix for each slide item
+            parametric (bool): curve parameterization
+
+        Attributes:
+            curve (str): name
+            prefix (str): prefix for item
+            parameter (float): float value for motionPath
+            parametric (list): state of curve parameterization
+            driven (str): object that receives the transform
+        """
+
+    def __init__(self, curve, parameter, prefix, parametric=False, driven=None):
+        self.curve = curve
+        self.prefix = prefix
+        self.parameter = parameter
+        self.parametric = not parametric
+
+        self.driven = driven
+
+        self.create_item()
+
+    def create_item(self):
+        if not self.driven:
+            self.create_driven()
+
+        self.driver = cmds.createNode('motionPath', n='{}_mPath_{}'.format(self.curve, self.prefix))
+        cmds.setAttr('{}.fractionMode'.format(self.driver), self.parametric)
+        cmds.connectAttr('{}.worldSpace'.format(self.curve), '{}.geometryPath'.format(self.driver))
+        self.blend_node = cmds.createNode('animBlendNodeAdditive', n='{}_{}_addOffset'.format(self.curve, self.prefix))
+        cmds.setAttr('{}.inputA'.format(self.blend_node), self.parameter)
+        cmds.connectAttr('{}.output'.format(self.blend_node), '{}.uValue'.format(self.driver))
+        cmds.connectAttr('{}.allCoordinates'.format(self.driver), '{}.t'.format(self.driven))
+
+    def create_driven(self):
+        self.driven = cmds.createNode('transform', n='{}_{}'.format(self.curve, self.prefix))
+
 
 class DrivenSlideCurve(object):
+    """ Create driven slide curve
+
+            Args:
+                curve (str): name of nurbs curve
+                parametric (bool): curve parameterization
+
+            Attributes:
+                curve (str): name
+                parametric (list): state of curve parameterization
+                driver_nodes (list): list motionPath nodes
+                blend_nodes (list): list blend nodes
+            """
+
     def __init__(self, curve, parametric=False):
         self.curve = curve
         self.parametric = not parametric
@@ -145,44 +202,43 @@ class DrivenSlideCurve(object):
             self.blend_nodes.append(blend_node)
 
 
-class SlideItem(object):
-    """ Creates a slide item
-
-        Args:
-            curve (str): name of nurbs curve
-            parameter (float): value for position node on curve
-            prefix (str): prefix for each slide item
-            parametric (bool): curve parameterization
-
-        Attributes:
-            curve (str): name
-            prefix (str): prefix for item
-            parameter (float): float value for motionPath
-            parametric (list): state of curve parameterization
-            driven (str): object that receives the transform
-        """
-
-    def __init__(self, curve, parameter, prefix, parametric=False):
+class RebuildCurveMPath(object):
+    def __init__(self, curve, degree=3, spans=1, smooth=1, parametric=False, match=False, connection=False):
         self.curve = curve
-        self.prefix = prefix
-        self.parameter = parameter
+        self.degree = degree
+        self.spans = spans
+        self.smooth = smooth
         self.parametric = not parametric
+        self.match = match
+        self.connection = connection
 
-        self.driven = None
+        self.rebuild_curve = None
 
-        self.create_item()
+        self.points_count = self.degree + self.spans
+        if match:
+            self.points_count = len(cmds.getAttr('{}.controlPoints[*]'.format(self.curve)))
 
-    def create_item(self):
-        if not self.driven:
-            self.create_driven()
+        self.range_value = 1
+        if not self.parametric:
+            cmds.getAttr('{}.spans'.format(self.curve))
 
-        self.driver = cmds.createNode('motionPath', n='{}_mPath_{}'.format(self.curve, self.prefix))
-        cmds.setAttr('{}.fractionMode'.format(self.driver), self.parametric)
-        cmds.connectAttr('{}.worldSpace'.format(self.curve), '{}.geometryPath'.format(self.driver))
-        self.blend_node = cmds.createNode('animBlendNodeAdditive', n='{}_{}_addOffset'.format(self.curve, self.prefix))
-        cmds.setAttr('{}.inputA'.format(self.blend_node), self.parameter)
-        cmds.connectAttr('{}.output'.format(self.blend_node), '{}.uValue'.format(self.driver))
-        cmds.connectAttr('{}.allCoordinates'.format(self.driver), '{}.t'.format(self.driven))
+        self.smooth_points = self.points_count * self.smooth
+        self.rebuild_points = [x for x in xrange(self.smooth_points)]
+        self.values = utils.get_value_range(self.smooth_points, self.range_value)
 
-    def create_driven(self):
-        self.driven = cmds.createNode('transform', n='{}_{}'.format(self.curve, self.prefix))
+        self.rebuild()
+
+    def rebuild(self):
+        self.rebuild_curve = curve.Curve(objects=self.rebuild_points, degree=self.degree,
+                                         name='{}_rebuild'.format(self.curve)).create_curve()
+
+        for n, v in enumerate(self.values):
+            driver = cmds.createNode('motionPath')
+            cmds.connectAttr('{}.worldSpace'.format(self.curve), '{}.geometryPath'.format(driver))
+            cmds.setAttr('{}.fractionMode'.format(driver), self.parametric)
+            cmds.setAttr('{}.uValue'.format(driver), v)
+            cmds.connectAttr('{}.allCoordinates'.format(driver), '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
+            if not self.connection:
+                cmds.disconnectAttr('{}.allCoordinates'.format(driver),
+                                    '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
+                cmds.delete(driver)

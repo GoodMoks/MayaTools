@@ -82,8 +82,8 @@ class MakeSlide(object): # WIP
         print 'build'
 
         self.create_slide_curve()
-        self.create_driven_curve()
-        #self.create_item()
+        #self.create_driven_curve()
+        self.create_item()
         #self.slide.set_global_scale_ctrl('curve1_CTRL', 'scaleX')
 
 

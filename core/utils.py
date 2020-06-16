@@ -66,6 +66,6 @@ def create_follicle(name):
 
 
 def get_value_range(count, max=1):
-    coefficient = max / float(count - max)
+    coefficient = max / float(count-1)
 
     return [round(x * coefficient, 5) for x in xrange(count)]

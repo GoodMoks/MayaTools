@@ -2,10 +2,6 @@ import maya.cmds as cmds
 import math
 
 
-class RebuildCurve():
-    def __init__(self, curve, smooth=1):
-        self.curve = curve
-        self.smooth = smooth
 
 
 
