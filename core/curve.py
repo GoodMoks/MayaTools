@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
+import MayaTools.core.utils as utils
 
 reload(base)
 
@@ -44,10 +45,6 @@ def connect_curve_to_objects(curve, objects=None):
         controls.append(ctrl)
 
     return controls
-
-
-
-
 
 
 class Curve(object):
@@ -105,6 +102,50 @@ class Curve(object):
                              type='double3')
         except:
             pass
+
+
+class RebuildCurveMPath(object):
+    def __init__(self, curve, degree=3, spans=1, smooth=1, parametric=False, match=False, connection=False,
+                 prefix=None):
+        self.curve = curve
+        self.degree = degree
+        self.spans = spans
+        self.smooth = smooth
+        self.parametric = not parametric
+        self.match = match
+        self.connection = connection
+        self.prefix = 'rebuild' if not prefix else prefix
+
+        self.rebuild_curve = None
+
+        self.points_count = self.degree + self.spans
+        if match:
+            self.points_count = len(cmds.getAttr('{}.controlPoints[*]'.format(self.curve)))
+
+        self.range_value = 1
+        if not self.parametric:
+            cmds.getAttr('{}.spans'.format(self.curve))
+
+        self.smooth_points = self.points_count * self.smooth
+        self.rebuild_points = [x for x in xrange(self.smooth_points)]
+        self.values = utils.get_value_range(self.smooth_points, self.range_value)
+
+        self.rebuild()
+
+    def rebuild(self):
+        self.rebuild_curve = Curve(objects=self.rebuild_points, degree=self.degree,
+                                   name='{}_{}'.format(self.curve, self.prefix)).create_curve()
+
+        for n, v in enumerate(self.values):
+            driver = cmds.createNode('motionPath')
+            cmds.connectAttr('{}.worldSpace'.format(self.curve), '{}.geometryPath'.format(driver))
+            cmds.setAttr('{}.fractionMode'.format(driver), self.parametric)
+            cmds.setAttr('{}.uValue'.format(driver), v)
+            cmds.connectAttr('{}.allCoordinates'.format(driver), '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
+            if not self.connection:
+                cmds.disconnectAttr('{}.allCoordinates'.format(driver),
+                                    '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
+                cmds.delete(driver)
 
 
 class NewCurve(Curve):

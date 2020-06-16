@@ -202,43 +202,4 @@ class DrivenSlideCurve(object):
             self.blend_nodes.append(blend_node)
 
 
-class RebuildCurveMPath(object):
-    def __init__(self, curve, degree=3, spans=1, smooth=1, parametric=False, match=False, connection=False):
-        self.curve = curve
-        self.degree = degree
-        self.spans = spans
-        self.smooth = smooth
-        self.parametric = not parametric
-        self.match = match
-        self.connection = connection
 
-        self.rebuild_curve = None
-
-        self.points_count = self.degree + self.spans
-        if match:
-            self.points_count = len(cmds.getAttr('{}.controlPoints[*]'.format(self.curve)))
-
-        self.range_value = 1
-        if not self.parametric:
-            cmds.getAttr('{}.spans'.format(self.curve))
-
-        self.smooth_points = self.points_count * self.smooth
-        self.rebuild_points = [x for x in xrange(self.smooth_points)]
-        self.values = utils.get_value_range(self.smooth_points, self.range_value)
-
-        self.rebuild()
-
-    def rebuild(self):
-        self.rebuild_curve = curve.Curve(objects=self.rebuild_points, degree=self.degree,
-                                         name='{}_rebuild'.format(self.curve)).create_curve()
-
-        for n, v in enumerate(self.values):
-            driver = cmds.createNode('motionPath')
-            cmds.connectAttr('{}.worldSpace'.format(self.curve), '{}.geometryPath'.format(driver))
-            cmds.setAttr('{}.fractionMode'.format(driver), self.parametric)
-            cmds.setAttr('{}.uValue'.format(driver), v)
-            cmds.connectAttr('{}.allCoordinates'.format(driver), '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
-            if not self.connection:
-                cmds.disconnectAttr('{}.allCoordinates'.format(driver),
-                                    '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
-                cmds.delete(driver)

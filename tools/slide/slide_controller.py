@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.tools.slide.slide as slide
 import MayaTools.core.curve as curve
-import MayaTools.tools.rivet.new_rivet as rivet
+import MayaTools.tools.rivet.rivet as rivet
 import MayaTools.core.utils as utils
 
 reload(utils)
