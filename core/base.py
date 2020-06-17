@@ -16,6 +16,11 @@ def get_MObject(obj):
 
 
 def get_dagPath(obj):
+    """ get dag path of given object API 2.0
+
+        :param obj: object
+        :return: dag path
+    """
     m_obj = get_MObject(obj)
     if m_obj.hasFn(om2.MFn.kDagNode):
         m_dagPath = om2.MDagPath.getAPathTo(m_obj)
@@ -83,7 +88,7 @@ def get_instances_test():
     return instances
 
 
-def get_object_with_attr(obj_type, attr):
+def get_objects_with_attr(obj_type, attr):
     """ get objects who has given attr
 
     :param obj_type: 'om2.MFn.kLocator'
@@ -99,7 +104,6 @@ def get_object_with_attr(obj_type, attr):
             instances.append(iterDag.fullPathName())
         iterDag.next()
     return instances
-
 
 def is_pymel(obj):
     """ check is pymel object

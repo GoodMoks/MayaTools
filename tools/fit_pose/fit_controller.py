@@ -4,7 +4,6 @@ import MayaTools.core.dag as dag
 import fit
 
 
-
 class FitController(object):
     @staticmethod
     def is_mesh(obj):
@@ -64,7 +63,7 @@ class FitController(object):
             return joint, mesh
 
     def reset_bindPreMatrix(self, mesh, joint=None):
-        skinCluster = fit.FitObjects.get_skinCluster(mesh)
+        skinCluster = fit.FitObjects.get_skinCluster(pm.PyNode(mesh))
         if skinCluster:
             if joint:
                 index = fit.FitObjects.get_index_common_connections(joint, skinCluster[0], attr='worldMatrix')
@@ -72,6 +71,7 @@ class FitController(object):
                 inverse_matrix = pm.datatypes.Matrix(matrix).inverse()
                 pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), inverse_matrix, type='matrix')
             else:
+                print 'set_bindPreMatrix'
                 self.set_bindPreMatrix(self.calculate_bindPreMatrix(skinCluster[0]), mesh)
 
     def update_mesh(self):
@@ -90,8 +90,7 @@ class FitController(object):
             mesh_group = '{}_fit_grp'.format(selected_mesh[0])
             if pm.objExists(mesh_group):
                 pm.delete(mesh_group)
-
-            self.reset_bindPreMatrix(selected_mesh)
+            self.reset_bindPreMatrix(selected_mesh[0])
 
     def check_mesh(self, parent):
         selected_mesh = self.get_selected_mesh()
@@ -108,6 +107,7 @@ class FitController(object):
         selected = self.get_selected_couple()
         if selected:
             self.joints, self.mesh = selected
+            print self.mesh
             fit.FitObjects(self.joints, self.mesh)
 
     def delete_fit(self):
@@ -123,10 +123,12 @@ class FitController(object):
                 if dag.get_children(joint_fit):
                     child = dag.get_children(joint_fit)
                     parent = dag.get_parent(joint_fit)[0]
-                    print child
-                    print parent
                     pm.parent(child, parent)
 
                 pm.delete(joint_fit)
+                mesh_fit_grp = '{}_fit_grp'.format(mesh)
+                child = dag.get_children(mesh_fit_grp)
+                if not child:
+                    pm.delete(mesh_fit_grp)
 
                 self.reset_bindPreMatrix(mesh, joint)

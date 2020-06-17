@@ -10,11 +10,11 @@ class FitObjects(object):
 
     @staticmethod
     def get_skinCluster(obj):
-        return base.get_history(obj, type='skinCluster')
+        return base.get_history('{}'.format(obj), type='skinCluster')
 
     @staticmethod
     def get_index_common_connections(obj1, obj2, attr):
-        common_con = connections.get_common_connections(obj1, obj2, attr=attr)
+        common_con = connections.get_common_connections('{}'.format(obj1), '{}'.format(obj2), attr=attr)
         if common_con:
             return re.findall('[0-9]+', common_con[0])[0]
 

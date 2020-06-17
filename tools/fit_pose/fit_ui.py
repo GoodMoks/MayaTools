@@ -25,7 +25,7 @@ class FitUI(object):
                                           ann='Select Fit geometry to reset all fit changes')
                     check_btn = pm.button(label='Check', c=pm.Callback(self.controller.check_mesh, self.window),
                                           ann='Select Fit geometry to check for changes ')
-                    MayaTools.core.ui.separator. Separator('Joints', parent=main_ly, w=self.WIDTH, h=20)
+                    MayaTools.core.ui.separator.Separator('Joints', parent=main_ly, w=self.WIDTH, h=20)
                 with pm.horizontalLayout() as joint_ly:
                     add_btn = pm.button(label='Add', c=pm.Callback(self.controller.add_fit),
                                         ann='Select joint and mesh')
