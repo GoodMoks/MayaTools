@@ -18,10 +18,11 @@ class AddInBetweenUI(object):
     def check_box(self, *args):
         self.parent_flag = cmds.checkBox(self.checkbox, q=True, value=True)
 
-    def int_field(self, *args):
+    def int_field(self):
         self.divide_point = cmds.intSliderGrp(self.slider, q=True, value=True)
 
     def build(self, *args):
+        self.int_field()
         controller.JointBreaker(self.divide_point, self.parent_flag)
 
     def show(self):
@@ -37,8 +38,7 @@ class AddInBetweenUI(object):
         cmds.separator(h=15, p=slider_layout, vis=False)
         cmds.text(l="Set number of inbetween joints", p=slider_layout, bgc=[0.2, 0.2, 0.28], fn="fixedWidthFont")
         cmds.separator(h=5, p=slider_layout)
-        self.slider = cmds.intSliderGrp('slider', field=True, min=1, value=1, step=1, p=slider_layout,
-                                        dc=self.int_field)
+        self.slider = cmds.intSliderGrp('slider', field=True, min=1, value=1, step=1, p=slider_layout)
         cmds.separator(h=1, p=slider_layout, vis=False)
         self.checkbox = cmds.checkBox(label='   Create hierarchy', p=slider_layout, cc=self.check_box)
         cmds.separator(h=20, p=slider_layout)
