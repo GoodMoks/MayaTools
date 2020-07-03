@@ -6,14 +6,14 @@ from MayaTools.core.logger import logger
 import MayaTools.core.constraint as constraint
 
 
-class Space(object):
+class SpaceFloat(object):
     CTRL = 'Loc'
     BLEND_ATTR = 'Blend'
 
     def __init__(self, targets, driven, offset=True):
         self.targets = targets
         self.driven = driven
-        self.offset = True
+        self.offset = offset
 
         self.reverse_node = None
 
@@ -28,11 +28,27 @@ class Space(object):
 
     @logger
     def build(self):
-        self.add_attr()
-        self.connect()
+        # smooth ---------
+        # self.add_attr()
+        # self.connect_float()
+
+        # enum ---------
+        self.connect_enum()
 
     @logger
-    def connect(self):
+    def connect_enum(self):
+        self.apply_parentConstraint()
+
+        self.add_enum_attr()
+        for index, target in enumerate(self.targets):
+            logic_node = cmds.createNode('floatLogic', n='{}_logic'.format(target))
+            cmds.setAttr('{}.floatB'.format(logic_node), index)
+            cmds.connectAttr('{}.{}'.format(self.CTRL, self.BLEND_ATTR), '{}.floatA'.format(logic_node))
+            cmds.connectAttr('{}.outBool'.format(logic_node),
+                             '{}.{}W{}'.format(self.parentConstraint[0], self.targets[index], index))
+
+    @logger
+    def connect_float(self):
         self.apply_parentConstraint()
         self.reverse_node = cmds.createNode('reverse', n='{}_blend_rev'.format(self.driven))
         cmds.connectAttr('{}.{}'.format(self.CTRL, self.BLEND_ATTR),
@@ -43,14 +59,20 @@ class Space(object):
                          '{}.{}W0'.format(self.parentConstraint[0], self.targets[0]))
 
     @logger
-    def add_attr(self):
+    def add_attr(self, int=False):
         if self.smooth:
             self.add_float_attr()
+            return
+
+        if int:
+            self.add_int_attr()
+            return
+
+        self.add_enum_attr()
 
     @logger
     def add_float_attr(self):
         if not attribute.has_attr(self.CTRL, self.BLEND_ATTR):
-            print 'add attr'
             cmds.addAttr(self.CTRL, ln=self.BLEND_ATTR, k=True)
 
     @logger
@@ -59,7 +81,8 @@ class Space(object):
 
     @logger
     def add_enum_attr(self):
-        pass
+        if not attribute.has_attr(self.CTRL, self.BLEND_ATTR):
+            cmds.addAttr(self.CTRL, ln=self.BLEND_ATTR, enumName=':'.join(self.targets), k=True, attributeType='enum')
 
     @logger
     def apply_parentConstraint(self, translate=True, rotate=True):
@@ -68,3 +91,16 @@ class Space(object):
         self.parentConstraint = cmds.parentConstraint(self.targets, self.driven,
                                                       skipTranslate=skip_translate,
                                                       skipRotate=skip_rotate, mo=self.offset)
+
+
+
+
+
+class SpaceController(object):
+    def __init__(self, targets, driven, ctrl, attr_name, offset=True, ):
+        self.targets = targets
+        self.driven = driven
+        self.offset = offset
+
+
+
