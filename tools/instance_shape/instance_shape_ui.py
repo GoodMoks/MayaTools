@@ -3,7 +3,6 @@ from PySide2 import QtCore
 import pymel.core as pm
 import maya.OpenMaya as om
 import MayaTools.core.base as base
-import MayaTools.core.attribute as attribute
 import instance_shape_controller
 import instance_shape
 

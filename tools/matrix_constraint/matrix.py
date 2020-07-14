@@ -4,20 +4,38 @@ import maya.api.OpenMaya as om2
 import MayaTools.core.attribute as attribute
 
 
-class MatrixSystem(object):
+class MultMatrixSystem(object):
     @staticmethod
     def calculate_offset_matrix(driver, driven):
         driver_inverseMatrix = pm.getAttr('{}.worldInverseMatrix'.format(driver))
         driven_worldMatrix = pm.getAttr('{}.worldMatrix'.format(driven))
         return driven_worldMatrix * driver_inverseMatrix
 
+    @staticmethod
+    def reset_rotate_matrix(matrix):
+        m_matrix = om2.MMatrix(matrix)
+        transform_matrix = om2.MTransformationMatrix(m_matrix)
+        transform_matrix.setRotation(om2.MEulerRotation(0.0, 0.0, 0.0))
+        new_matrix = transform_matrix.asMatrix()
+        return pm.dt.Matrix(list(new_matrix))
+
+    @staticmethod
+    def reset_translate_matrix(matrix):
+        m_matrix = om2.MMatrix(matrix)
+        transform_matrix = om2.MTransformationMatrix(m_matrix)
+        transform_matrix.setTranslation(om2.MVector(0.0, 0.0, 0.0), om2.MSpace.kWorld)
+        new_matrix = transform_matrix.asMatrix()
+        return pm.dt.Matrix(list(new_matrix))
+
     MATRIX_ATTR = 'worldMatrix'
 
-    def __init__(self, target, driven, offset=True, parent=True):
+    def __init__(self, target, driven, offset=True, parent=True, skipTranslate=False, skipRotate=False):
         self.target = target
         self.driven = driven
-        self.parent = parent
         self.offset = offset
+        self.parent = parent
+        self.skipTranslate = skipTranslate
+        self.skipRotate = skipRotate
 
         self.multMatrix = None
 
@@ -25,14 +43,17 @@ class MatrixSystem(object):
         if parent:
             self.input_index = [1, 2, 0]
 
+        self.last_index = 3
+
     def create_system(self):
         self.create_multMatrix()
         self.connect_nodes()
         if self.offset:
             self.set_offset()
 
+
     def create_multMatrix(self):
-        self.multMatrix = cmds.createNode('multMatrix', n='{}_multOffset'.format(self.driven))
+        self.multMatrix = cmds.createNode('multMatrix', n='{}_multOffset'.format(self.target))
 
     def connect_nodes(self):
         cmds.connectAttr('{}.{}'.format(self.target, self.MATRIX_ATTR),
@@ -40,23 +61,35 @@ class MatrixSystem(object):
         cmds.connectAttr('{}.parentInverseMatrix'.format(self.driven),
                          '{}.matrixIn[{}]'.format(self.multMatrix, self.input_index[1]))
 
+
     def set_offset(self):
         offset = self.calculate_offset_matrix(self.target, self.driven)
+        if self.skipRotate:
+            offset = self.reset_rotate_matrix(offset)
+        if self.skipTranslate:
+            offset = self.reset_translate_matrix(offset)
+
         pm.setAttr('{}.matrixIn[{}]'.format(self.multMatrix, self.input_index[2]), offset)
+
+    def add_matrix(self, matrix):
+        index = self.last_index
+        cmds.setAttr('{}.matrixIn[{}]'.format(self.multMatrix, index), matrix, type='matrix')
+        self.last_index += 1
+
 
 
 class MatrixConstraint(object):
     @staticmethod
-    def get_selected():
-        sel = cmds.ls(sl=True)
-        if not sel:
-            om2.MGlobal.displayError('Nothing selected')
-            return
-
-        if not len(sel) > 1:
-            om2.MGlobal.displayError('There must be 2 selected objects')
-
-        return sel
+    def get_jointOrient_matrix(joint):
+        compose = cmds.createNode('composeMatrix')
+        inverse_matrix = cmds.createNode('inverseMatrix')
+        cmds.connectAttr('{}.jointOrient'.format(joint),
+                         '{}.inputRotate'.format(compose))
+        cmds.connectAttr('{}.outputMatrix'.format(compose),
+                         '{}.inputMatrix'.format(inverse_matrix))
+        matrix = cmds.getAttr('{}.outputMatrix'.format(inverse_matrix))
+        cmds.delete(compose, inverse_matrix)
+        return matrix
 
     CHANNELS = ('x', 'y', 'z')
 
@@ -113,24 +146,19 @@ class MatrixConstraint(object):
                                  '{}.r{}'.format(self.driven, axis), f=True)
 
     def joint_rotate_matrix(self):
-        self.rotate_multMatrix = cmds.createNode('multMatrix', n='rotate_multOffset'.format(self.driven))
+        self.rotate_multMatrix = cmds.createNode('multMatrix', n='{}_rotate_multOffset'.format(self.driven))
         self.rotate_decomposeMatrix = cmds.createNode('decomposeMatrix', n='{}_rotate_decMatrix'.format(self.driven))
 
-        compose = cmds.createNode('composeMatrix')
-        cmds.connectAttr('{}.jointOrient'.format(self.driven),
-                         '{}.inputRotate'.format(compose))
-        matrix = cmds.getAttr('{}.outputMatrix'.format(compose))
+        matrix = self.get_jointOrient_matrix(self.driven)
         cmds.setAttr('{}.matrixIn[1]'.format(self.rotate_multMatrix), matrix, type='matrix')
         cmds.connectAttr('{}.matrixSum'.format(self.main_multMatrix),
                          '{}.matrixIn[0]'.format(self.rotate_multMatrix))
         cmds.connectAttr('{}.matrixSum'.format(self.rotate_multMatrix),
                          '{}.inputMatrix'.format(self.rotate_decomposeMatrix))
 
-        cmds.delete(compose)
-
     def connect_object(self):
         if cmds.nodeType(self.driven) == 'joint':
-            if not self.skipRotate:
+            if not self.skipRotate and not self.skipTranslate:
                 self.joint_rotate_matrix()
 
         self.decomposeMatrix = cmds.createNode('decomposeMatrix', n='{}_decMatrix'.format(self.driven))
@@ -140,13 +168,22 @@ class MatrixConstraint(object):
         self.connect_channel()
 
     def create_matrix_systems(self):
+        skipTranslate = True if self.skipTranslate == self.CHANNELS else False
+        skipRotate = True if self.skipRotate == self.CHANNELS else False
+
         for target in self.targets:
-            matrix_system = MatrixSystem(target, self.driven, offset=self.offset, parent=self.parent)
+            matrix_system = MultMatrixSystem(target, self.driven, offset=self.offset, parent=self.parent,
+                                             skipTranslate=skipTranslate, skipRotate=skipRotate)
             matrix_system.create_system()
+            if cmds.nodeType(self.driven) == 'joint':
+                if not self.skipRotate and self.skipTranslate == self.CHANNELS:
+                    matrix_system.add_matrix(self.get_jointOrient_matrix(self.driven))
+
+
             self.matrix_systems.append(matrix_system)
 
         if len(self.targets) > 1:
-            self.blend_state = True
+            self.blend_matrix(self.matrix_systems)
         else:
             self.main_multMatrix = self.matrix_systems[0].multMatrix
 
@@ -154,11 +191,12 @@ class MatrixConstraint(object):
         if not isinstance(self.targets, list):
             self.targets = [self.targets]
 
-        self.create_matrix_systems()
-        if self.blend_state:
-            self.blend_matrix(self.matrix_systems)
+        pm.undoInfo(openChunk=True)
 
+        self.create_matrix_systems()
         self.connect_object()
+
+        pm.undoInfo(closeChunk=True)
 
 
 class PointMatrix(MatrixConstraint):
@@ -174,9 +212,8 @@ class OrientMatrix(MatrixConstraint):
     def __init__(self, targets, driven, offset=True, skipRotate=()):
         super(OrientMatrix, self).__init__(targets=targets, driven=driven, offset=offset,
                                            skipTranslate=self.CHANNELS, skipRotate=skipRotate,
-                                           skipScale=self.CHANNELS, parent=False)
+                                           skipScale=self.CHANNELS, parent=True)
 
-        print 'orient'
         self.build()
 
 
@@ -194,14 +231,5 @@ class ParentMatrix(MatrixConstraint):
         super(ParentMatrix, self).__init__(targets=targets, driven=driven, offset=offset,
                                            skipTranslate=skipTranslate, skipRotate=skipRotate,
                                            skipScale=self.CHANNELS, parent=True)
-
-        self.build()
-
-
-class MainMatrix(MatrixConstraint):
-    def __init__(self, targets, driven, offset=True, parent=True, skipTranslate=(), skipRotate=(), skipScale=()):
-        super(MainMatrix, self).__init__(targets=targets, driven=driven, offset=offset,
-                                         skipTranslate=skipTranslate, skipRotate=skipRotate,
-                                         skipScale=skipScale, parent=parent)
 
         self.build()
