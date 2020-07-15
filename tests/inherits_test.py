@@ -9,7 +9,7 @@ reload(test)
 #test.main_inherits()
 '''
 
-path = r"E:\Work\Pipeline\Projects\Speed_test\joint_matrix.mb"
+path = r"E:\Work\Pipeline\Projects\Speed_test\not_inverse.mb"
 range = 500
 
 def main():

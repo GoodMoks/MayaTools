@@ -91,7 +91,7 @@ class MatrixConstraint(object):
         cmds.delete(compose, inverse_matrix)
         return matrix
 
-    CHANNELS = ('x', 'y', 'z')
+    CHANNELS = ['x', 'y', 'z']
 
     def __init__(self, targets, driven, offset=True, parent=True, skipTranslate=(), skipRotate=(), skipScale=()):
         self.targets = targets
@@ -158,7 +158,7 @@ class MatrixConstraint(object):
 
     def connect_object(self):
         if cmds.nodeType(self.driven) == 'joint':
-            if not self.skipRotate and not self.skipTranslate:
+            if not self.skipRotate == self.CHANNELS and not self.skipTranslate == self.CHANNELS:
                 self.joint_rotate_matrix()
 
         self.decomposeMatrix = cmds.createNode('decomposeMatrix', n='{}_decMatrix'.format(self.driven))
@@ -176,7 +176,10 @@ class MatrixConstraint(object):
                                              skipTranslate=skipTranslate, skipRotate=skipRotate)
             matrix_system.create_system()
             if cmds.nodeType(self.driven) == 'joint':
-                if not self.skipRotate and self.skipTranslate == self.CHANNELS:
+                print self.skipRotate, 'skipRotate'
+                print self.skipTranslate == self.CHANNELS, 'skipTranslate'
+                if not self.skipRotate == self.CHANNELS and self.skipTranslate == self.CHANNELS:
+                    print 'add matrix'
                     matrix_system.add_matrix(self.get_jointOrient_matrix(self.driven))
 
 
