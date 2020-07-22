@@ -3,8 +3,6 @@ import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
 import MayaTools.core.utils as utils
 
-reload(base)
-
 
 def connect_cv_to_object(cv, obj):
     """ connect given cv to object
@@ -48,7 +46,30 @@ def connect_curve_to_objects(curve, objects=None):
 
 
 class Curve(object):
-    def __init__(self, objects, degree=None, name=None):
+    def __init__(self, points, degree, periodic, name):
+        self.points = points
+        self.degree = degree
+        self.periodic = periodic
+        self.name = name
+        self.knot = None
+
+    def create(self):
+        self.points = self.points[:self.degree] if self.periodic == 2 else self.points
+        self.knot = range(len(self.points) + self.degree - 1)
+
+        curve = cmds.curve(degree=self.degree,
+                           knot=self.knot,
+                           point=self.points,
+                           periodic=self.periodic,
+                           name=self.name)
+
+        curve = cmds.rename(curve, self.name)
+
+        return curve
+
+
+class CurveObjects(object):
+    def __init__(self, objects, degree=None, name=None, connect=False):
         """ class for create nurbs curve from given objects
 
         :param objects: 'list' objects
@@ -56,8 +77,11 @@ class Curve(object):
         """
         self.objects = objects
         self.degree = degree
+        self.connect = connect
         self.name = name or 'NewCurve'
+
         self.curve = None
+
         self.count_objects = len(self.objects)
 
     def create_curve(self):
@@ -66,15 +90,16 @@ class Curve(object):
                 self.calculate_degree()
 
             self.build_curve()
+
+            if self.connect:
+                self.connect_cv()
+
             return self.curve
 
     def check_degree(self):
         if self.count_objects == 1:
             om2.MGlobal.displayError('Need more then 1 object')
             return False
-
-        if not self.degree:
-            return True
 
         if self.degree > 3:
             om2.MGlobal.displayError('I can only make a 3 degree curve')
@@ -94,7 +119,7 @@ class Curve(object):
 
     def build_curve(self):
         points = [(0, 0, 0) for x in range(self.count_objects)]
-        self.curve = cmds.curve(p=points, degree=self.degree, n=self.name)
+        self.curve = Curve(points=points, degree=self.degree, periodic=0, name=self.name)
         try:
             for point, cv in zip(self.objects, range(self.count_objects)):
                 point_pos = cmds.xform(point, ws=True, t=True, q=True)
@@ -102,6 +127,9 @@ class Curve(object):
                              type='double3')
         except:
             pass
+
+    def connect_cv(self):
+        connect_curve_to_objects(self.curve, self.objects)
 
 
 class RebuildCurveMPath(object):
@@ -133,8 +161,8 @@ class RebuildCurveMPath(object):
         self.rebuild()
 
     def rebuild(self):
-        self.rebuild_curve = Curve(objects=self.rebuild_points, degree=self.degree,
-                                   name='{}_{}'.format(self.curve, self.prefix)).create_curve()
+        self.rebuild_curve = CurveObjects(objects=self.rebuild_points, degree=self.degree,
+                                          name='{}_{}'.format(self.curve, self.prefix)).create_curve()
 
         for n, v in enumerate(self.values):
             driver = cmds.createNode('motionPath')
@@ -146,28 +174,6 @@ class RebuildCurveMPath(object):
                 cmds.disconnectAttr('{}.allCoordinates'.format(driver),
                                     '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
                 cmds.delete(driver)
-
-
-class NewCurve(Curve):
-    def __init__(self, objects, degree=None, connect=False):
-        """ Additional functionality for Curve class
-
-        :param objects: 'list' objects
-        :param degree: 'int' number of curve degree
-        :param connect: 'bool' True: connect cv curve to objects
-        """
-        super(NewCurve, self).__init__(objects, degree)
-        self.connect = connect
-
-        if self.create_curve():
-            if self.connect:
-                self.connect_cv()
-
-    def connect_cv(self):
-        if not self.count_objects == len(self.objects):
-            om2.MGlobal.displayError('Cv counting curve is not equal to the number of objects to connect')
-
-        connect_curve_to_objects(self.curve, self.objects)
 
 
 def connect_to_cv(curve, step=40, obj_type='joint'):  # WIP
