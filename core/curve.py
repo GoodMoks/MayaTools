@@ -45,27 +45,7 @@ def connect_curve_to_objects(curve, objects=None):
     return controls
 
 
-class Curve(object):
-    def __init__(self, points, degree, periodic, name):
-        self.points = points
-        self.degree = degree
-        self.periodic = periodic
-        self.name = name
-        self.knot = None
 
-    def create(self):
-        self.points = self.points[:self.degree] if self.periodic == 2 else self.points
-        self.knot = range(len(self.points) + self.degree - 1)
-
-        curve = cmds.curve(degree=self.degree,
-                           knot=self.knot,
-                           point=self.points,
-                           periodic=self.periodic,
-                           name=self.name)
-
-        curve = cmds.rename(curve, self.name)
-
-        return curve
 
 
 class CurveObjects(object):
@@ -119,14 +99,11 @@ class CurveObjects(object):
 
     def build_curve(self):
         points = [(0, 0, 0) for x in range(self.count_objects)]
-        self.curve = Curve(points=points, degree=self.degree, periodic=0, name=self.name)
-        try:
-            for point, cv in zip(self.objects, range(self.count_objects)):
-                point_pos = cmds.xform(point, ws=True, t=True, q=True)
-                cmds.setAttr('{}.controlPoints[{}]'.format(self.curve, cv), point_pos[0], point_pos[1], point_pos[2],
-                             type='double3')
-        except:
-            pass
+        self.curve = cmds.curve(point=points, degree=self.degree, name=self.name)
+        for point, cv in zip(self.objects, range(self.count_objects)):
+            point_pos = cmds.xform(point, ws=True, t=True, q=True)
+            cmds.setAttr('{}.controlPoints[{}]'.format(self.curve, cv), point_pos[0], point_pos[1], point_pos[2],
+                         type='double3')
 
     def connect_cv(self):
         connect_curve_to_objects(self.curve, self.objects)

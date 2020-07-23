@@ -65,41 +65,120 @@ class ControlShape(data.JsonData):
         self.shapes = self.read_data()
 
 
-# shape = ControlShape()
-# shape.delete_shape('cube')
-# shape.add_shape('cube', {'name': 12321})
-
-
 class Shape(object):
     def __init__(self):
-        self.periodic = None
-        self.degree = None
         self.point = None
-        # self.knot = None
-
-    # @staticmethod
-    # def get_knots(curve):
-    #     info = cmds.createNode("curveInfo")
-    #     cmds.connectAttr("{0}.worldSpace".format(curve), "{0}.inputCurve".format(info))
-    #     knots = cmds.getAttr("{0}.knots[*]".format(info))
-    #     cmds.delete(info)
-    #     return knots
+        self.degree = None
+        self.periodic = None
 
     @logger
-    def add(self, control):
+    def add_control(self, control):
         shape = dag.get_shapes(control)
         if not shape:
-            om2.MGlobal.displayError('{} has no shape'.format(control))
-            return
+            raise ValueError('{} has no shape'.format(control))
 
         if not cmds.nodeType(shape[0]) == 'nurbsCurve':
-            om2.MGlobal.displayError('{} not nurbsCurve'.format(control))
-            return
+            raise TypeError('{} not nurbsCurve'.format(control))
 
-        # self.knot = self.get_knots(shape[0])
         self.degree = cmds.getAttr("{0}.degree".format(shape[0]))
         self.point = cmds.getAttr("{0}.cv[*]".format(shape[0]))
         self.periodic = cmds.getAttr("{0}.form".format(shape[0]))
+
+    def add_shape(self, point, degree, periodic):
+        if not isinstance(point, list):
+            om2.MGlobal.displayError('Point must be list: [[0, 0, 0], [0, 0, 0], [0, 0, 0]]')
+            return
+
+        self.point = point
+        self.degree = degree
+        self.periodic = periodic
+
+
+class CurveShape(object):
+    def __init__(self, shape):
+        self.shape = shape
+
+        self.name = None
+        self.point = None
+        self.degree = None
+        self.knot = None
+        self.periodic = None
+
+        self.curve = None
+
+        if not isinstance(shape, Shape):
+            raise TypeError('Argument must be of instance class "{}"'.format(Shape.__name__))
+
+        self.assign()
+
+    def assign(self):
+        self.point = self.shape.point
+        self.degree = self.shape.degree
+        self.periodic = self.shape.periodic
+
+    def calculate(self):
+        self.point = self.shape.point.extend[:self.shape.degree] if self.shape.periodic else self.shape.point
+        self.knot = range(len(self.shape.point) + self.shape.degree - 1)
+
+    def create_curve(self):
+        self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=self.point,
+                                periodic=self.periodic, name=self.name)
+
+    def create(self, name=None):
+        self.name = name or 'NewCurve'
+
+        self.calculate()
+        self.create_curve()
+        return self.curve
+
+
+class Curve(object):
+    def __init__(self, points, degree, periodic, name=None, matrix=None, parent=None):
+        self.points = points
+        self.degree = degree
+        self.periodic = periodic
+        self.name = name or 'NewCurve'
+        self.matrix = matrix
+        self.parent = parent
+
+        self.knot = None
+        self.curve = None
+
+        self.create()
+
+    def create(self):
+        self.create_curve()
+        if self.matrix:
+            print 'add matrix'
+
+        if self.parent:
+            print 'add parent'
+
+        return self.curve
+
+    def create_curve(self):
+        self.points = self.points.extend[:self.degree] if self.periodic else self.points
+        self.knot = range(len(self.points) + self.degree - 1)
+
+        self.curve = cmds.curve(degree=self.degree,
+                                knot=self.knot,
+                                point=self.points,
+                                periodic=self.periodic,
+                                name=self.name)
+
+
+class ControlsController(object):
+    def __init__(self):
+        pass
+
+    def create_control(self, name):
+        shape = ControlShape()
+        control_shape = shape.get_shape(name)
+        if control_shape:
+            print control_shape
+
+    def export_control(self, curve):
+        pass
 
 
 def test():

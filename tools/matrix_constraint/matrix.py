@@ -176,8 +176,6 @@ class MatrixConstraint(object):
                                              skipTranslate=skipTranslate, skipRotate=skipRotate)
             matrix_system.create_system()
             if cmds.nodeType(self.driven) == 'joint':
-                print self.skipRotate, 'skipRotate'
-                print self.skipTranslate == self.CHANNELS, 'skipTranslate'
                 if not self.skipRotate == self.CHANNELS and self.skipTranslate == self.CHANNELS:
                     print 'add matrix'
                     matrix_system.add_matrix(self.get_jointOrient_matrix(self.driven))
