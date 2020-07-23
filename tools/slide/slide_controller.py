@@ -31,7 +31,7 @@ class SlideSurface(object): #WIP
         print 'add_iso_node'
         self.curve_iso_node = cmds.createNode('curveFromSurfaceIso', n='{}_iso_curve_node'.format(self.surface))
         cmds.connectAttr('{}.worldSpace'.format(self.surface), '{}.inputSurface'.format(self.curve_iso_node))
-        self.curve_iso = curve.CurveObjectsBase([1, 2], name='{}_iso_curve'.format(self.surface)).create_curve()
+        self.curve_iso = curve.CurveObjectsBase([1, 2], name='{}_iso_curve'.format(self.surface)).create()
         cmds.connectAttr('{}.outputCurve'.format(self.curve_iso_node), '{}.create'.format(self.curve_iso))
         cmds.setAttr('{}.isoparmValue'.format(self.curve_iso_node), value)
 
