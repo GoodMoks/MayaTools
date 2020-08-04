@@ -5,6 +5,7 @@ import MayaTools.core.utils as utils
 from MayaTools.core.logger import logger
 import MayaTools.core.dag as dag
 
+
 def connect_cv_to_object(cv, obj):
     """ connect given cv to object
 
@@ -51,6 +52,32 @@ class CurveShape(object):
         self.point = None
         self.degree = None
         self.periodic = None
+        self.knot = None
+
+    @logger
+    def __add(self, point, degree, periodic, knot):
+        if not isinstance(point, list):
+            raise TypeError('Point must be list: [[0, 0, 0], [0, 0, 0], [0, 0, 0], ...]')
+
+        if not isinstance(degree, int):
+            raise TypeError('Degree must be integer')
+
+        if not isinstance(periodic, int):
+            raise TypeError('Periodic must be integer')
+
+        if not isinstance(point, list):
+            raise TypeError('Knot must be list: [0, 1, 2, 3, 4, 5, ...]')
+
+        if len(point) + 1 <= degree:
+            raise ValueError('Points must be 1 more than the degree')
+
+        print 'new points' if periodic else 'old points'
+
+        #self.point = point + point[:degree] if periodic else point
+        self.point = point
+        self.degree = degree
+        self.periodic = periodic
+        self.knot = knot
 
     @logger
     def add_control(self, control):
@@ -61,24 +88,32 @@ class CurveShape(object):
         if not cmds.nodeType(shape[0]) == 'nurbsCurve':
             raise TypeError('{} not nurbsCurve'.format(control))
 
-        self.degree = cmds.getAttr("{0}.degree".format(shape[0]))
-        self.point = cmds.getAttr("{0}.cv[*]".format(shape[0]))
-        self.periodic = cmds.getAttr("{0}.form".format(shape[0]))
+        point = cmds.getAttr("{0}.cv[*]".format(shape[0]))
+        degree = cmds.getAttr("{0}.degree".format(shape[0]))
+        periodic = cmds.getAttr("{0}.form".format(shape[0]))
+        knot = get_curve_knots(control)
+
+        self.__add(point, degree, periodic, knot)
+
+    def get_data(self):
+        return dict(
+            knot=self.knot,
+            point=self.point,
+            degree=self.degree,
+            periodic=self.periodic
+        )
 
     @logger
-    def add_shape(self, point, degree, periodic):
-        if not isinstance(point, list):
-            raise TypeError('Point must be list: [[0, 0, 0], [0, 0, 0], [0, 0, 0]]')
+    def add_data(self, data):
+        self.__add(data['point'], data['degree'],
+                   data['periodic'], data['knot'])
 
-        if not isinstance(degree, int):
-            raise TypeError('Degree must be integer')
+    @logger
+    def add_shape(self, point, degree, periodic=0, knot=None):
+        if periodic and not knot:
+            knot = []
 
-        if not isinstance(periodic, int):
-            raise TypeError('Periodic must be integer')
-
-        self.point = point
-        self.degree = degree
-        self.periodic = periodic
+        self.__add(point, degree, periodic, knot)
 
 
 class Curve(object):
@@ -102,19 +137,15 @@ class Curve(object):
         self.point = self.shape.point
         self.degree = self.shape.degree
         self.periodic = self.shape.periodic
-
-    def __calculate(self):
-        self.point = self.shape.point.extend[:self.shape.degree] if self.shape.periodic else self.shape.point
-        self.knot = range(len(self.shape.point) + self.shape.degree - 1) if self.shape.periodic else []
+        self.knot = self.shape.knot
 
     def __create_curve(self):
+        #self.point = self.point + self.point[:self.degree] if self.periodic else self.point
         self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=self.point,
                                 periodic=self.periodic, name=self.name)
 
     def create(self, name=None):
         self.name = name or 'NewCurve'
-
-        self.__calculate()
         self.__create_curve()
         return self.curve
 
@@ -172,7 +203,7 @@ class CurveObjects(object):
         points = [(0, 0, 0) for x in range(self.count_objects)]
 
         curve_shape = CurveShape()
-        curve_shape.add_shape(point=points, degree=self.degree, periodic=0)
+        curve_shape.add_shape(point=points, degree=self.degree)
         curve_main = Curve(curve_shape)
         self.curve = curve_main.create()
 
@@ -227,6 +258,13 @@ class RebuildCurveMPath(object):
                 cmds.disconnectAttr('{}.allCoordinates'.format(driver),
                                     '{}.controlPoints[{}]'.format(self.rebuild_curve, n))
                 cmds.delete(driver)
+
+
+def get_curve_knots(curve):
+    dag_curve = base.get_dagPath(curve)
+    fn_curve = om2.MFnNurbsCurve()
+    fn_curve.setObject(dag_curve)
+    return list(fn_curve.knots())
 
 
 def connect_to_cv(curve, step=40, obj_type='joint'):  # WIP

@@ -1,11 +1,7 @@
 import os
-import json
-import maya.cmds as cmds
-import pymel.core as pm
 import maya.api.OpenMaya as om2
 from MayaTools.core.logger import logger
 import MayaTools.core.data as data
-import MayaTools.core.dag as dag
 
 
 class ControlShape(data.JsonData):
@@ -14,7 +10,7 @@ class ControlShape(data.JsonData):
 
     def __init__(self):
         super(ControlShape, self).__init__(self.FILE_PATH)
-        self.shapes = self._data
+        self.shapes = self._data if self._data else {}
 
     @logger
     def get_all_shapes(self):
@@ -35,6 +31,22 @@ class ControlShape(data.JsonData):
             return True
 
     @logger
+    def edit_shape(self, name, key=None, value=None):
+        all_shapes = self.get_all_shapes()
+
+        if self.__check_exist_shape(name):
+            if value:
+                if not value == all_shapes[name]:
+                    all_shapes[name] = value
+
+            if key:
+                if not name == key:
+                    all_shapes[key] = all_shapes.pop[name]
+
+        self.write_data(all_shapes)
+        self.update()
+
+    @logger
     def delete_shape(self, names):
         if isinstance(names, basestring):
             names = [names]
@@ -43,7 +55,7 @@ class ControlShape(data.JsonData):
 
         for name in names:
             if self.__check_exist_shape(name):
-                all_shapes.pop(name, None)
+                del all_shapes[name]
 
         self.write_data(all_shapes)
         self.update()
@@ -63,51 +75,3 @@ class ControlShape(data.JsonData):
     @logger
     def update(self):
         self.shapes = self.read_data()
-
-
-
-
-
-class ControlsController(object):
-    def __init__(self):
-        pass
-
-    def create_control(self, name):
-        shape = ControlShape()
-        control_shape = shape.get_shape(name)
-        if control_shape:
-            print control_shape
-
-    def export_control(self, curve):
-        pass
-
-
-def test():
-    shape = ControlShape().get_shape('cube')
-    curve = Curve(shape['point'], shape['degree'], shape['periodic'])
-    curve.create()
-
-# def createCurve(name='', control='circle'):
-#     """ Creates NURBS curves
-#
-#     :param name: 'str' name object
-#     :param control: 'str' shape of the curves
-#     :return: 'str' new object
-#     """
-#     if isinstance(name, basestring) and isinstance(control, basestring):
-#         baseDir = os.path.dirname(__file__)
-#         nameFile = 'controls.json'
-#         path = os.path.join(baseDir, nameFile)
-#
-#
-#         with open(path) as f:
-#             control = json.load(f)[control]
-#
-#         curve = cmds.curve(degree=control['degree'],
-#                            knot=control['knot'],
-#                            point=control['point'],
-#                            periodic=control['periodic'])
-#         if not name == '':
-#             curve = cmds.rename(curve, name)
-#
-#         return curve
