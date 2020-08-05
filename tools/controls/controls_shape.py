@@ -8,7 +8,9 @@ class ControlShape(data.JsonData):
     FILE_NAME = 'controls.json'
     FILE_PATH = os.path.join(os.path.dirname(__file__), FILE_NAME)
 
+    @logger
     def __init__(self):
+        print self.FILE_PATH
         super(ControlShape, self).__init__(self.FILE_PATH)
         self.shapes = self._data if self._data else {}
 

@@ -5,13 +5,14 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.tools.controls.controls_shape as controls
 import MayaTools.core.curve as curve
-import MayaTools.core.base as base
-
+import MayaTools.tools.controls.curve_rnd as rnd
+from MayaTools.core.logger import logger
+reload(rnd)
 reload(curve)
 reload(controls)
 
 
-class ControlManagerController(object):
+class ControlsController(object):
     def __init__(self):
         pass
 
@@ -20,23 +21,13 @@ class ControlManagerController(object):
         names = controls_data.get_all_shapes().keys()
         return names
 
-    def create_control(self, name):
-        controls_data = controls.ControlShape()
-        shape_data = controls_data.get_shape(name)
-        shape = curve.CurveShape()
-        shape.add_data(shape_data)
-        print name, 'new curve'
-        curve_main = curve.Curve(shape)
-        curve_node = curve_main.create(name=name)
+    def create_control(self, type):
+        print type
+        manager = rnd.ControlManager()
+        manager.create(type)
 
-
-    def export_control(self, control):
-        shape = curve.CurveShape()
-        shape.add_control(control)
-        shape_data = controls.ControlShape()
-        shape_data.add_shape(key=control, value=shape.get_data())
-        print 'export {}'.format(control)
-
+    def export_control(self):
+        pass
 
 class ControlsUI(QtWidgets.QDialog):
     MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
@@ -53,7 +44,7 @@ class ControlsUI(QtWidgets.QDialog):
         self.add_to_layout()
         self.make_connections()
 
-        self.controller = ControlManagerController()
+        self.controller = ControlsController()
         self.fill_list()
 
     def create_widgets(self):
