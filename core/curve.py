@@ -2,7 +2,6 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
 import MayaTools.core.utils as utils
-from MayaTools.core.logger import logger
 import MayaTools.core.dag as dag
 
 
@@ -54,7 +53,6 @@ class CurveShape(object):
         self.periodic = None
         self.knot = None
 
-    @logger
     def __add(self, point, degree, periodic, knot):
         if not isinstance(point, list):
             raise TypeError('Point must be list: [[0, 0, 0], [0, 0, 0], [0, 0, 0], ...]')
@@ -71,15 +69,12 @@ class CurveShape(object):
         if len(point) + 1 <= degree:
             raise ValueError('Points must be 1 more than the degree')
 
-        print 'new points' if periodic else 'old points'
-
-        #self.point = point + point[:degree] if periodic else point
         self.point = point
         self.degree = degree
         self.periodic = periodic
         self.knot = knot
 
-    @logger
+
     def add_control(self, control):
         shape = dag.get_shapes(control)
         if not shape:
@@ -103,12 +98,10 @@ class CurveShape(object):
             periodic=self.periodic
         )
 
-    @logger
     def add_data(self, data):
         self.__add(data['point'], data['degree'],
                    data['periodic'], data['knot'])
 
-    @logger
     def add_shape(self, point, degree, periodic=0, knot=None):
         if periodic and not knot:
             knot = []
@@ -121,31 +114,24 @@ class Curve(object):
         self.shape = shape
 
         if not isinstance(shape, CurveShape):
-            raise TypeError('Argument must be of instance class "{}"'.format(CurveShape.__name__))
+            raise TypeError('Argument must be of instance class "{}"'.format(shape.CurveShape.__name__))
 
-        self.name = None
-        self.point = None
-        self.degree = None
-        self.knot = None
-        self.periodic = None
+        self.name = 'NewCurve'
 
-        self.curve = None
-
-        self.__assign()
-
-    def __assign(self):
+        self.knot = self.shape.knot
         self.point = self.shape.point
         self.degree = self.shape.degree
         self.periodic = self.shape.periodic
-        self.knot = self.shape.knot
+
+        self.curve = None
 
     def __create_curve(self):
-        #self.point = self.point + self.point[:self.degree] if self.periodic else self.point
-        self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=self.point,
+        point = self.point + self.point[:self.degree] if self.periodic else self.point
+        self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=point,
                                 periodic=self.periodic, name=self.name)
 
     def create(self, name=None):
-        self.name = name or 'NewCurve'
+        self.name = name if name else self.name
         self.__create_curve()
         return self.curve
 

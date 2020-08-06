@@ -1,15 +1,10 @@
-from PySide2 import QtWidgets
-from PySide2 import QtCore
 import pymel.core as pm
 import maya.cmds as cmds
+from PySide2 import QtCore
+from PySide2 import QtWidgets
 import maya.api.OpenMaya as om2
-import MayaTools.tools.controls.controls_shape as controls
-import MayaTools.core.curve as curve
-import MayaTools.tools.controls.curve_rnd as rnd
-from MayaTools.core.logger import logger
-reload(rnd)
-reload(curve)
-reload(controls)
+import MayaTools.core.data as data
+import MayaTools.tools.controls.controls as controls
 
 
 class ControlsController(object):
@@ -17,17 +12,17 @@ class ControlsController(object):
         pass
 
     def get_all_control_names(self):
-        controls_data = controls.ControlShape()
+        controls_data = data.ShapeData()
         names = controls_data.get_all_shapes().keys()
         return names
 
     def create_control(self, type):
-        print type
-        manager = rnd.ControlManager()
+        manager = controls.ControlManager()
         manager.create(type)
 
     def export_control(self):
         pass
+
 
 class ControlsUI(QtWidgets.QDialog):
     MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
