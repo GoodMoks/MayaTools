@@ -2,6 +2,8 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.curve as curve
+reload(data)
+reload(curve)
 
 class ControlManager(object):
     def __init__(self):
@@ -20,12 +22,17 @@ class ControlManager(object):
         return curve_node
 
     @staticmethod
-    def export(control):
+    def export(control, overwrite=True):
         shape = curve.CurveShape()
         shape.add_control(control)
         shape_data = data.ShapeData()
-        shape_data.add_shape(key=control, value=shape.get_data(), override=True)
+        shape_data.add_shape(key=control, value=shape.get_data(), overwrite=overwrite)
         om2.MGlobal.displayInfo('Export {}'.format(control))
+
+    @staticmethod
+    def delete(control):
+        shape_data = data.ShapeData()
+        shape_data.delete_shape(control)
 
 
 def export_all():

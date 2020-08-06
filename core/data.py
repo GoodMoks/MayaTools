@@ -3,12 +3,14 @@ import json
 import maya.api.OpenMaya as om2
 
 
+
 class JsonData(object):
     def __init__(self, file_path):
         self.file_path = file_path
         self._data = None
 
         self.__read()
+
 
     def __write(self, data):
         if self.__check_file_exist:
@@ -18,6 +20,7 @@ class JsonData(object):
             except Exception:
                 om2.MGlobal.displayError('Failed write data in file: {}'.format(self.file_path))
                 om2.MGlobal.displayError('{}'.format(Exception))
+
 
     def __read(self):
         if self.__check_file_exist():
@@ -30,11 +33,11 @@ class JsonData(object):
 
     def __check_file_exist(self):
         if not os.path.exists(self.file_path):
-            if not self.__check_file_exist():
-                om2.MGlobal.displayError('The file is not json: {}'.format(self.file_path))
-                return False
-
             om2.MGlobal.displayError('file does not exist: {}'.format(self.file_path))
+            return False
+
+        if not self.__check_file_extension():
+            om2.MGlobal.displayError('The file is not json: {}'.format(self.file_path))
             return False
 
         return True
@@ -54,11 +57,12 @@ class JsonData(object):
 
 
 class ShapeData(JsonData):
-    FILE_NAME = 'controls.json'
-    FILE_PATH = os.path.join(os.path.dirname(__file__), FILE_NAME)
+    # FILE_NAME = 'controls.json'
+    # FILE_PATH = os.path.join(os.path.dirname(__file__), FILE_NAME)
+
+    FILE_PATH = 'E:\Work\Pipeline\Projects\Tools\MayaTools\data\controls.json'
 
     def __init__(self):
-        print self.FILE_PATH
         super(ShapeData, self).__init__(self.FILE_PATH)
         self.shapes = self._data if self._data else {}
 
@@ -92,23 +96,19 @@ class ShapeData(JsonData):
         self.write_data(all_shapes)
         self.update()
 
-    def delete_shape(self, names):
-        if isinstance(names, basestring):
-            names = [names]
+    def delete_shape(self, name):
 
         all_shapes = self.get_all_shapes()
-
-        for name in names:
-            if self.__check_exist_shape(name):
-                del all_shapes[name]
+        if self.__check_exist_shape(name):
+            del all_shapes[name]
 
         self.write_data(all_shapes)
         self.update()
 
-    def add_shape(self, key, value, override=False):
+    def add_shape(self, key, value, overwrite=False):
         all_shapes = self.get_all_shapes()
         if all_shapes.has_key(key):
-            if not override:
+            if not overwrite:
                 return
 
         all_shapes[key] = value
