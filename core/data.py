@@ -73,6 +73,7 @@ class ShapeData(JsonData):
         if self.__check_exist_shape(name):
             return self.shapes[name]
 
+
     def __check_exist_shape(self, name):
         if self.shapes:
             if name not in self.shapes:
@@ -83,7 +84,6 @@ class ShapeData(JsonData):
 
     def edit_shape(self, name, key=None, value=None):
         all_shapes = self.get_all_shapes()
-
         if self.__check_exist_shape(name):
             if value:
                 if not value == all_shapes[name]:
@@ -91,7 +91,7 @@ class ShapeData(JsonData):
 
             if key:
                 if not name == key:
-                    all_shapes[key] = all_shapes.pop[name]
+                    all_shapes[key] = all_shapes.pop(name)
 
         self.write_data(all_shapes)
         self.update()

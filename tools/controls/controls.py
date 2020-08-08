@@ -2,8 +2,10 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.curve as curve
+
 reload(data)
 reload(curve)
+
 
 class ControlManager(object):
     def __init__(self):
@@ -13,13 +15,14 @@ class ControlManager(object):
     def create(type, name=None):
         controls_data = data.ShapeData()
         shape_data = controls_data.get_shape(type)
-        shape = curve.CurveShape()
-        shape.add_data(shape_data)
-        curve_main = curve.Curve(shape)
-        if not name:
-            name = type
-        curve_node = curve_main.create(name=name)
-        return curve_node
+        if shape_data:
+            shape = curve.CurveShape()
+            shape.add_data(shape_data)
+            curve_main = curve.Curve(shape)
+            if not name:
+                name = type
+            curve_node = curve_main.create(name=name)
+            return curve_node
 
     @staticmethod
     def export(control, overwrite=True):
@@ -33,6 +36,11 @@ class ControlManager(object):
     def delete(control):
         shape_data = data.ShapeData()
         shape_data.delete_shape(control)
+
+    @staticmethod
+    def edit_control_name(old, new):
+        shape_data = data.ShapeData()
+        shape_data.edit_shape(old, key=new)
 
 
 def export_all():

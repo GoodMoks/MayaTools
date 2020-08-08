@@ -124,11 +124,15 @@ class Curve(object):
         self.periodic = self.shape.periodic
 
         self.curve = None
+        self.curve_shape = None
 
     def __create_curve(self):
         point = self.point + self.point[:self.degree] if self.periodic else self.point
         self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=point,
                                 periodic=self.periodic, name=self.name)
+
+        self.curve_shape = dag.get_shapes(self.curve)
+        cmds.rename(self.curve_shape, '{}Shape'.format(self.name))
 
     def create(self, name=None):
         self.name = name if name else self.name

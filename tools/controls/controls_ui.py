@@ -4,9 +4,11 @@ from PySide2 import QtCore
 from PySide2 import QtWidgets
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
+import MayaTools.core.ui.QMessageBox as message
 import MayaTools.tools.controls.controls as controls
 
 reload(controls)
+reload(message)
 reload(data)
 
 
@@ -44,6 +46,13 @@ class ControlsController(object):
             manager.delete(i.text())
 
 
+    def edit_item_name(self, old, new):
+        if self.exists_control(new):
+            return
+        manager = controls.ControlManager()
+        manager.edit_control_name(old, new)
+
+
 class ControlsUI(QtWidgets.QDialog):
     MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
 
@@ -62,6 +71,7 @@ class ControlsUI(QtWidgets.QDialog):
         self.make_connections()
 
         self.names = None
+        self.prev_item_name = None
 
         self.controller = ControlsController()
         self.update_list()
@@ -89,10 +99,10 @@ class ControlsUI(QtWidgets.QDialog):
     def add_to_layout(self):
         self.main_ly.addLayout(self.button_ly)
         self.main_ly.addLayout(self.sorted_form_ly)
-        self.button_ly.addWidget(self.create_btn)
+        self.button_ly.addWidget(self.delete_btn)
         self.button_ly.addWidget(self.export_btn)
         self.main_ly.addWidget(self.control_list_wdg)
-        self.main_ly.addWidget(self.delete_btn)
+        self.main_ly.addWidget(self.create_btn)
 
     def make_connections(self):
         self.create_btn.clicked.connect(self.create_control)
@@ -100,6 +110,8 @@ class ControlsUI(QtWidgets.QDialog):
         self.sorted_comboBox_wdg.currentIndexChanged.connect(self.set_sorting)
         self.search_text_le.textChanged.connect(self.filter_search_letter)
         self.delete_btn.clicked.connect(self.delete_control)
+        self.control_list_wdg.itemDoubleClicked.connect(self.item_clicked)
+        self.control_list_wdg.itemChanged.connect(self.edit_item)
 
     def get_all_items_name(self):
         items = []
@@ -148,20 +160,8 @@ class ControlsUI(QtWidgets.QDialog):
         self.control_list_wdg.clear()
         for name in names:
             item = QtWidgets.QListWidgetItem(name)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
             self.control_list_wdg.addItem(item)
-
-    def message_box(self, control):
-        msgBox = QtWidgets.QMessageBox()
-        msgBox.setText("{} already exists, overwrite it".format(control))
-        msgBox.setWindowTitle("Information")
-        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-
-        returnValue = msgBox.exec_()
-
-        if returnValue == QtWidgets.QMessageBox.Ok:
-            return True
-        if returnValue == QtWidgets.QMessageBox.Cancel:
-            return False
 
     def export_control(self):
         selected = cmds.ls(sl=True)
@@ -171,7 +171,10 @@ class ControlsUI(QtWidgets.QDialog):
 
         for s in selected:
             if self.controller.exists_control(s):
-                if not self.message_box(s):
+                msg = message.MessageQuestion(title='Information',
+                                              text="{} already exists, overwrite it".format(s),
+                                              parent=self)
+                if not msg.showUI():
                     continue
 
             self.controller.export_control(s)
@@ -192,9 +195,20 @@ class ControlsUI(QtWidgets.QDialog):
             om2.MGlobal.displayError('Nothing selected')
             return
 
-        self.controller.delete_control(selected_item)
+        msg = message.MessageQuestion(title='Information',
+                                      text='Delete controls? Are you sure?',
+                                      parent=self)
+        if msg.showUI():
+            self.controller.delete_control(selected_item)
 
         self.update_list()
+
+    def edit_item(self, args):
+        self.controller.edit_item_name(self.prev_item_name, args.text())
+        self.update_list()
+
+    def item_clicked(self, args):
+        self.prev_item_name = args.text()
 
     @classmethod
     def showUI(cls):
