@@ -3,14 +3,12 @@ import json
 import maya.api.OpenMaya as om2
 
 
-
 class JsonData(object):
     def __init__(self, file_path):
         self.file_path = file_path
         self._data = None
 
         self.__read()
-
 
     def __write(self, data):
         if self.__check_file_exist:
@@ -20,7 +18,6 @@ class JsonData(object):
             except Exception:
                 om2.MGlobal.displayError('Failed write data in file: {}'.format(self.file_path))
                 om2.MGlobal.displayError('{}'.format(Exception))
-
 
     def __read(self):
         if self.__check_file_exist():
@@ -56,14 +53,14 @@ class JsonData(object):
         return self._data
 
 
-class ShapeData(JsonData):
-    # FILE_NAME = 'controls.json'
+class CurveShapeData(JsonData):
+    # FILE_NAME = 'control_manager.json'
     # FILE_PATH = os.path.join(os.path.dirname(__file__), FILE_NAME)
 
     FILE_PATH = 'E:\Work\Pipeline\Projects\Tools\MayaTools\data\controls.json'
 
     def __init__(self):
-        super(ShapeData, self).__init__(self.FILE_PATH)
+        super(CurveShapeData, self).__init__(self.FILE_PATH)
         self.shapes = self._data if self._data else {}
 
     def get_all_shapes(self):
@@ -72,7 +69,6 @@ class ShapeData(JsonData):
     def get_shape(self, name):
         if self.__check_exist_shape(name):
             return self.shapes[name]
-
 
     def __check_exist_shape(self, name):
         if self.shapes:
@@ -97,7 +93,6 @@ class ShapeData(JsonData):
         self.update()
 
     def delete_shape(self, name):
-
         all_shapes = self.get_all_shapes()
         if self.__check_exist_shape(name):
             del all_shapes[name]

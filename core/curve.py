@@ -3,7 +3,9 @@ import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
 import MayaTools.core.utils as utils
 import MayaTools.core.dag as dag
+import MayaTools.core.data as data
 
+reload(data)
 
 def connect_cv_to_object(cv, obj):
     """ connect given cv to object
@@ -44,6 +46,67 @@ def connect_curve_to_objects(curve, objects=None):
         controls.append(ctrl)
 
     return controls
+
+class CurveManager(object):
+    @staticmethod
+    def create(curve_type, name=None):
+        """ create nurbsCurve of a given type
+
+        :param curve_type: 'str' name type of curve (circle, cube, star)
+        :param name: 'str' name for new curve
+        :return: 'list' [transform, curve shape]
+        """
+        controls_data = data.CurveShapeData()
+        shape_data = controls_data.get_shape(curve_type)
+        if not shape_data:
+            return False
+
+        shape = CurveShape()
+        shape.add_data(shape_data)
+        curve_main = Curve(shape)
+        if not name:
+            name = curve_type
+        curve_node = curve_main.create(name=name)
+        return curve_node
+
+
+    @staticmethod
+    def export(nurbsCurve, overwrite=True):
+        """ add new nurbsCurve parameters to database
+
+        :param nurbsCurve: 'str' name of exist nurbsCurve
+        :param overwrite: 'bool' if exist given nurbsCurve in base
+        :return: 'bool' if is successful
+        """
+        shape = CurveShape()
+        shape.add_control(nurbsCurve)
+        shape_data = data.CurveShapeData()
+        shape_data.add_shape(key=nurbsCurve, value=shape.get_data(), overwrite=overwrite)
+        om2.MGlobal.displayInfo('Export {}'.format(nurbsCurve))
+        return True
+
+    @staticmethod
+    def delete(control):
+        """ delete nurbsCurve from database
+
+        :param control: 'str' name nurbsCurve
+        :return: 'bool' if is successful
+        """
+        shape_data = data.CurveShapeData()
+        shape_data.delete_shape(control)
+        return True
+
+    @staticmethod
+    def change_name(old, new):
+        """ change name nurbsCurve in database
+
+        :param old: 'str' old name
+        :param new: 'str' new name
+        :return: 'bool' if is successful
+        """
+        shape_data = data.CurveShapeData()
+        shape_data.edit_shape(old, key=new)
+        return True
 
 
 class CurveShape(object):
@@ -131,13 +194,13 @@ class Curve(object):
         self.curve = cmds.curve(degree=self.degree, knot=self.knot, point=point,
                                 periodic=self.periodic, name=self.name)
 
-        self.curve_shape = dag.get_shapes(self.curve)
-        cmds.rename(self.curve_shape, '{}Shape'.format(self.name))
+        self.curve_shape = dag.get_shapes(self.curve)[0]
+        self.curve_shape = cmds.rename(self.curve_shape, '{}_Shape'.format(self.name))
 
     def create(self, name=None):
         self.name = name if name else self.name
         self.__create_curve()
-        return self.curve
+        return [self.curve, self.curve_shape]
 
 
 class CurveObjects(object):
@@ -170,17 +233,14 @@ class CurveObjects(object):
 
     def check_degree(self):
         if self.count_objects == 1:
-            om2.MGlobal.displayError('Need more then 1 object')
-            return False
+            raise ValueError('Need more then 1 object')
 
         if self.degree > 3:
-            om2.MGlobal.displayError('I can only make a 3 degree curve')
-            return False
+            raise ValueError('I can only make a 3 degree curve')
 
         if not self.degree <= self.count_objects - 1:
-            om2.MGlobal.displayError(
+            raise ValueError(
                 'For a {} degree curve, {} objects are needed'.format(self.degree, self.degree + 1))
-            return False
 
         return True
 
@@ -195,7 +255,7 @@ class CurveObjects(object):
         curve_shape = CurveShape()
         curve_shape.add_shape(point=points, degree=self.degree)
         curve_main = Curve(curve_shape)
-        self.curve = curve_main.create()
+        self.curve, shape = curve_main.create()
 
         for point, cv in zip(self.objects, range(self.count_objects)):
             point_pos = cmds.xform(point, ws=True, t=True, q=True)

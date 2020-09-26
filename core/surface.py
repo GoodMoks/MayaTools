@@ -8,7 +8,7 @@ def merge_cv(surface=None, controls=None):  # WIP
     """ Merge to one neighborhoods cv's
 
     :param surface: 'str' surface name
-    :param controls: 'list' of controls
+    :param controls: 'list' of control_manager
     :return:
     """
     if surface and controls:

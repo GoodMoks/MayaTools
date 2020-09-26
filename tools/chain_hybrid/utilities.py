@@ -132,7 +132,7 @@ def createCurve(name='', control='circle'):
     """
     if isinstance(name, basestring) and isinstance(control, basestring):
         baseDir = os.path.dirname(__file__)
-        nameFile = 'controls.json'
+        nameFile = 'control_manager.json'
         path = os.path.join(baseDir, nameFile)
 
 

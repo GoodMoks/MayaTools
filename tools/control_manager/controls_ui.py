@@ -5,7 +5,7 @@ from PySide2 import QtWidgets
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.ui.QMessageBox as message
-import MayaTools.tools.controls.controls as controls
+import MayaTools.tools.control_manager.controls as controls
 
 reload(controls)
 reload(message)
@@ -18,13 +18,13 @@ class ControlsController(object):
 
     @staticmethod
     def get_all_control_names():
-        controls_data = data.ShapeData()
+        controls_data = data.CurveShapeData()
         names = controls_data.get_all_shapes().keys()
         return names
 
     @staticmethod
     def create_control(items):
-        manager = controls.ControlManager()
+        manager = controls.CurveShapeManager()
         for i in items:
             manager.create(i.text())
 
@@ -36,21 +36,20 @@ class ControlsController(object):
 
     @staticmethod
     def export_control(control):
-        manager = controls.ControlManager()
+        manager = controls.CurveShapeManager()
         manager.export(control, overwrite=True)
 
     @staticmethod
     def delete_control(items):
-        manager = controls.ControlManager()
+        manager = controls.CurveShapeManager()
         for i in items:
             manager.delete(i.text())
-
 
     def edit_item_name(self, old, new):
         if self.exists_control(new):
             return
-        manager = controls.ControlManager()
-        manager.edit_control_name(old, new)
+        manager = controls.CurveShapeManager()
+        manager.change_name(old, new)
 
 
 class ControlsUI(QtWidgets.QDialog):
@@ -196,7 +195,7 @@ class ControlsUI(QtWidgets.QDialog):
             return
 
         msg = message.MessageQuestion(title='Information',
-                                      text='Delete controls? Are you sure?',
+                                      text='Delete control_manager? Are you sure?',
                                       parent=self)
         if msg.showUI():
             self.controller.delete_control(selected_item)
