@@ -51,6 +51,16 @@ def time_info(func):
     return timeRun
 
 
+def chunk_decorator(func):
+    cmds.undoInfo(openChunk=True)
+
+    def function(*func_args, **func_kwargs):
+        return func(*func_args, **func_kwargs)
+
+    cmds.undoInfo(closeChunk=True)
+    return function
+
+
 def create_follicle(name):
     """ create follicle
     :param name: 'str' name for follicle

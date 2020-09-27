@@ -6,9 +6,11 @@ import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.ui.QMessageBox as message
 import MayaTools.tools.control_manager.controls as controls
+import MayaTools.core.curve as curve
 
 reload(controls)
 reload(message)
+reload(curve)
 reload(data)
 
 
@@ -24,9 +26,21 @@ class ControlsController(object):
 
     @staticmethod
     def create_control(items):
-        manager = controls.CurveShapeManager()
-        for i in items:
-            manager.create(i.text())
+        cmds.undoInfo(openChunk=True)
+
+        selection = cmds.ls(sl=True)
+        if selection:
+            for sel in selection:
+                for i in items:
+                    control_curve = controls.ControlCurve(control=i.text(), align=sel)
+                    control_curve.create()
+
+        else:
+            for i in items:
+                control_curve = controls.ControlCurve(control=i.text())
+                control_curve.create()
+
+        cmds.undoInfo(closeChunk=True)
 
     def exists_control(self, control):
         all_controls = self.get_all_control_names()
@@ -36,19 +50,19 @@ class ControlsController(object):
 
     @staticmethod
     def export_control(control):
-        manager = controls.CurveShapeManager()
+        manager = curve.CurveManager()
         manager.export(control, overwrite=True)
 
     @staticmethod
     def delete_control(items):
-        manager = controls.CurveShapeManager()
+        manager = curve.CurveManager()
         for i in items:
             manager.delete(i.text())
 
     def edit_item_name(self, old, new):
         if self.exists_control(new):
             return
-        manager = controls.CurveShapeManager()
+        manager = curve.CurveManager()
         manager.change_name(old, new)
 
 
