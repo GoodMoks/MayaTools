@@ -36,3 +36,14 @@ def get_parent(obj, all=False):
     """
 
     return cmds.listRelatives(obj, p=True, ap=all, shapes=False)
+
+
+def object_type(obj):
+    shapes = get_shapes(obj)
+    if not shapes:
+        return cmds.objectType(obj)
+
+    return cmds.objectType(shapes[0])
+
+
+
