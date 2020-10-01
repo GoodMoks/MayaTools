@@ -87,7 +87,7 @@ class ControlCurve(object):
 
     def set_matrix(self, matrix):
         cmds.xform(self.curve, m=matrix)
-        if not self.scale:
+        if self.scale:
             cmds.makeIdentity(self.curve, a=True, scale=True)
 
     def set_scale_shape(self):

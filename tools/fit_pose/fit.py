@@ -1,73 +1,63 @@
-import re
-from maya.OpenMaya import MGlobal
 import pymel.core as pm
+import maya.cmds as cmds
 import MayaTools.core.connections as connections
-import MayaTools.core.base as base
+import MayaTools.core.dag as dag
+import MayaTools.core.skin as skin
 
+import MayaTools.tools.control_manager.controls as controls
 
 class FitObjects(object):
     """ class for create fit locators on joints """
-
-    @staticmethod
-    def get_skinCluster(obj):
-        return base.get_history('{}'.format(obj), type='skinCluster')
-
-    @staticmethod
-    def get_index_common_connections(obj1, obj2, attr):
-        common_con = connections.get_common_connections('{}'.format(obj1), '{}'.format(obj2), attr=attr)
-        if common_con:
-            return re.findall('[0-9]+', common_con[0])[0]
-
+    PREFIX = '_Fit'
     def __init__(self, joints, geo):
         self.joints = joints
         self.geo = geo
         self.skinCluster = None
+
+        self.fit_grp = None
+        self.fit_objects = []
+
         self.build()
 
+    def create_fit_grp(self):
+        self.fit_grp = '{}_fit_grp'.format(self.geo)
+        if not pm.objExists(self.fit_grp):
+            self.fit_grp = cmds.createNode('transform', n=self.fit_grp)
+
+    def restore_hierarchy(self):
+        for loc, joint in zip(self.fit_objects, self.joints):
+            parent_joint = dag.get_parent(joint)
+            if parent_joint in self.joints:
+                pm.parent(loc, '{}{}'.format(parent_joint, self.PREFIX))
+
     def build(self):
-        self.skinCluster = self.get_skinCluster(self.geo)[0]
-        if not self.skinCluster:
-            MGlobal.displayError('{} since it is not a skinned object'.format(self.geo))
-            return False
-
-        fit_locators = []
-        fit_joints = []
-
-        self.mesh_fit_grp = '{}_fit_grp'.format(self.geo)
-        if not pm.objExists(self.mesh_fit_grp):
-            self.mesh_fit_grp = pm.createNode('transform', n=self.mesh_fit_grp)
-
+        self.create_fit_grp()
+        self.skinCluster = skin.get_skinCluster(self.geo)[0]
         for joint in self.joints:
-            bindPreMatrixIndex = self.get_index_common_connections(joint, self.skinCluster, attr='worldMatrix')
-            if not bindPreMatrixIndex:
+            index = connections.get_index_common_connections(joint, self.skinCluster, attr='worldMatrix')
+            if not index:
                 continue
+
+            curve = controls.ControlCurve('sphere', name='{}'.format(joint), prefix=self.PREFIX)
+            fit_object = pm.PyNode(curve.create()[0])
+            self.fit_objects.append(fit_object)
+            cmds.parent(str(fit_object), self.fit_grp)
 
             # get connected bindPreMatrix data
             joint_worldMarix = pm.getAttr('{}.worldMatrix'.format(joint))
-            bindPreMatrix = pm.getAttr('{}.bindPreMatrix[{}]'.format(self.skinCluster, bindPreMatrixIndex))
-
-            fit_joints.append(joint)
-
-            loc = pm.spaceLocator(n='{}_fit_loc'.format(joint))
-
-            loc.setMatrix((joint_worldMarix * bindPreMatrix * joint_worldMarix))
-            pm.parent(loc, self.mesh_fit_grp)
-            fit_locators.append(loc)
-
-            mult_node = pm.createNode('multMatrix', n='{}_fit_multMatrix'.format(joint))
-
-            loc_inverseWorldMatrix = pm.getAttr('{}.worldInverseMatrix'.format(joint))
-            pm.setAttr('{}.matrixIn[0]'.format(mult_node), loc_inverseWorldMatrix)
-            pm.connectAttr('{}.worldMatrix'.format(loc), '{}.matrixIn[1]'.format(mult_node))
-            pm.setAttr('{}.matrixIn[2]'.format(mult_node), loc_inverseWorldMatrix)
-
-            mult_node.matrixSum.connect('{}.bindPreMatrix[{}]'.format(self.skinCluster, bindPreMatrixIndex))
-
-        for loc, joint in zip(fit_locators, self.joints):
-            parent_joint = joint.getParent()
-            if parent_joint in self.joints:
-                pm.parent(loc, '{}_fit_loc'.format(parent_joint))
+            bindPreMatrix = pm.getAttr('{}.bindPreMatrix[{}]'.format(self.skinCluster, index))
 
 
+            object_matrix = joint_worldMarix * bindPreMatrix * joint_worldMarix
+            fit_object.setMatrix(object_matrix)
 
+            mult_node = cmds.createNode('multMatrix', n='{}_fit_multMatrix'.format(joint))
 
+            joint_worldInverseMatrix = cmds.getAttr('{}.worldInverseMatrix'.format(joint))
+            cmds.setAttr('{}.matrixIn[0]'.format(mult_node), joint_worldInverseMatrix, type='matrix')
+            cmds.connectAttr('{}.worldMatrix'.format(fit_object), '{}.matrixIn[1]'.format(mult_node))
+            cmds.setAttr('{}.matrixIn[2]'.format(mult_node), joint_worldInverseMatrix, type='matrix')
+
+            cmds.connectAttr('{}.matrixSum'.format(mult_node), '{}.bindPreMatrix[{}]'.format(self.skinCluster, index))
+
+        self.restore_hierarchy()

@@ -1,4 +1,5 @@
 import maya.cmds as cmds
+import re
 
 """
 Module for works with connections 
@@ -25,6 +26,11 @@ def get_common_connections(obj1, obj2, attr=None):
 
     return [con.split('.')[1] for con in connections if con.split('.')[0] == obj2]
 
+
+def get_index_common_connections(obj1, obj2, attr):
+    common_con = get_common_connections('{}'.format(obj1), '{}'.format(obj2), attr=attr)
+    if common_con:
+        return re.findall('[0-9]+', common_con[0])[0]
 
 def get_input_connections_pairs(obj):
     inputs = []

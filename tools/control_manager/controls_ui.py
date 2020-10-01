@@ -13,6 +13,12 @@ reload(message)
 reload(curve)
 reload(data)
 
+"""
+#import MayaTools.tools.control_manager.controls_ui as ui
+#reload(ui)
+from MayaTools.tools.control_manager.controls_ui import ControlsUI
+ControlsUI().showUI()
+"""
 
 class ControlsController(object):
     def __init__(self):
@@ -25,19 +31,21 @@ class ControlsController(object):
         return names
 
     @staticmethod
-    def create_control(items):
+    def create_control(items, name, scale, size, world, prefix):
         cmds.undoInfo(openChunk=True)
 
         selection = cmds.ls(sl=True)
         if selection:
             for sel in selection:
                 for i in items:
-                    control_curve = controls.ControlCurve(control=i.text(), align=sel)
+                    control_curve = controls.ControlCurve(control=i.text(), align=sel, align_name=name, scale=scale,
+                                                          size=size, world=world, prefix=prefix)
                     control_curve.create()
 
         else:
             for i in items:
-                control_curve = controls.ControlCurve(control=i.text())
+                control_curve = controls.ControlCurve(control=i.text(), scale=scale, size=size,
+                                                      world=world, prefix=prefix)
                 control_curve.create()
 
         cmds.undoInfo(closeChunk=True)
@@ -100,6 +108,15 @@ class ControlsUI(QtWidgets.QDialog):
         self.create_btn = QtWidgets.QPushButton('Create')
         self.export_btn = QtWidgets.QPushButton('Export')
         self.delete_btn = QtWidgets.QPushButton('Delete')
+        self.scale_freeze_cb = QtWidgets.QCheckBox('Scale Freeze')
+        self.scale_freeze_cb.setCheckState(QtCore.Qt.Checked)
+        self.object_name_cb = QtWidgets.QCheckBox('Object Name')
+        self.object_name_cb.setCheckState(QtCore.Qt.Checked)
+        self.world_matrix_cb = QtWidgets.QCheckBox('World Location')
+        self.world_matrix_cb.setCheckState(QtCore.Qt.Checked)
+        self.prefix_le = QtWidgets.QLineEdit('_CTRL')
+        self.size_spin = QtWidgets.QDoubleSpinBox()
+        self.size_spin.setValue(1)
 
     def create_layout(self):
         self.main_ly = QtWidgets.QVBoxLayout(self)
@@ -108,13 +125,33 @@ class ControlsUI(QtWidgets.QDialog):
         self.sorted_form_ly.addRow('Filter', self.sorted_comboBox_wdg)
         self.sorted_form_ly.addRow('Search', self.search_text_le)
         self.button_ly = QtWidgets.QHBoxLayout()
+        self.options_group_box = QtWidgets.QGroupBox('Options')
+        self.options_group_box.setAlignment(QtCore.Qt.AlignCenter)
+        self.options_checkBox_ly = QtWidgets.QHBoxLayout()
+        self.options_ly = QtWidgets.QVBoxLayout()
+        self.prefix_scale_ly = QtWidgets.QHBoxLayout()
+        self.prefix_ly = QtWidgets.QFormLayout()
+        self.prefix_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
+        self.prefix_ly.addRow('Prefix', self.prefix_le)
+        self.size_ly = QtWidgets.QFormLayout()
+        self.size_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
+        self.size_ly.addRow('Size', self.size_spin)
 
     def add_to_layout(self):
-        self.main_ly.addLayout(self.button_ly)
         self.main_ly.addLayout(self.sorted_form_ly)
+        self.main_ly.addLayout(self.button_ly)
         self.button_ly.addWidget(self.delete_btn)
         self.button_ly.addWidget(self.export_btn)
         self.main_ly.addWidget(self.control_list_wdg)
+        self.options_checkBox_ly.addWidget(self.scale_freeze_cb)
+        self.options_checkBox_ly.addWidget(self.object_name_cb)
+        self.options_checkBox_ly.addWidget(self.world_matrix_cb)
+        self.options_ly.addLayout(self.options_checkBox_ly)
+        self.prefix_scale_ly.addLayout(self.prefix_ly)
+        self.prefix_scale_ly.addLayout(self.size_ly)
+        self.options_ly.addLayout(self.prefix_scale_ly)
+        self.options_group_box.setLayout(self.options_ly)
+        self.main_ly.addWidget(self.options_group_box)
         self.main_ly.addWidget(self.create_btn)
 
     def make_connections(self):
@@ -125,6 +162,8 @@ class ControlsUI(QtWidgets.QDialog):
         self.delete_btn.clicked.connect(self.delete_control)
         self.control_list_wdg.itemDoubleClicked.connect(self.item_clicked)
         self.control_list_wdg.itemChanged.connect(self.edit_item)
+
+        self.options_group_box.clicked.connect(self.hide_group)
 
     def get_all_items_name(self):
         items = []
@@ -144,6 +183,9 @@ class ControlsUI(QtWidgets.QDialog):
             self.filter_list(filter)
         else:
             self.filter_list(self.names)
+
+    def hide_group(self, *args):
+        print args, 'args'
 
     def update_list(self):
         self.names = self.controller.get_all_control_names()
@@ -200,7 +242,12 @@ class ControlsUI(QtWidgets.QDialog):
             om2.MGlobal.displayError('Nothing selected')
             return
 
-        self.controller.create_control(selected_item)
+        scale = True if self.scale_freeze_cb.checkState() == QtCore.Qt.CheckState.Checked else False
+        world = True if self.world_matrix_cb.checkState() == QtCore.Qt.CheckState.Checked else False
+        name = True if self.object_name_cb.checkState() == QtCore.Qt.CheckState.Checked else False
+
+        self.controller.create_control(selected_item, scale=scale, size=self.size_spin.value(),
+                                       world=world, prefix=self.prefix_le.text(), name=name)
 
     def delete_control(self):
         selected_item = self.control_list_wdg.selectedItems()
