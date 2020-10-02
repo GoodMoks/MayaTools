@@ -6,6 +6,9 @@ import MayaTools.core.skin as skin
 import MayaTools.core.mesh as core_mesh
 import MayaTools.tools.control_manager.controls as controls
 
+reload(skin)
+reload(connections)
+
 class FitPose(object):
     PREFIX_GRP = '_fit_grp'
 
@@ -21,11 +24,6 @@ class FitPose(object):
         for index, m in enumerate(matrix):
             pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), m, type='matrix')
 
-    @staticmethod
-    def calculate_bindPreMatrix(skinCluster):
-        matrix = pm.getAttr('{}.matrix'.format(skinCluster))
-        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix if x]
-        return inverse_matrix
 
     def __init__(self, mesh, joints=None):
         self.mesh = mesh
@@ -74,14 +72,11 @@ class FitPose(object):
 
     def reset(self):
         skinCluster = skin.get_skinCluster(self.mesh)
+        bindPose = skin.get_bindPose(self.mesh)
         if self.joints:
             for joint in self.joints:
-                if cmds.objExists('{}{}'.format(joint, FitObjects.PREFIX)):
-                    fit_obj = '{}{}'.format(joint, FitObjects.PREFIX)
-                    cmds.delete(fit_obj)
-
-                index = connections.get_index_common_connections(joint, skinCluster[0], attr='worldMatrix')
-                matrix = pm.getAttr('{}.matrix[{}]'.format(skinCluster[0], index))
+                index = connections.get_index_common_connections(joint, bindPose[0], attr='bindPose')
+                matrix = pm.getAttr('{}.worldMatrix[{}]'.format(bindPose[0], index))
                 inverse_matrix = pm.datatypes.Matrix(matrix).inverse()
                 pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), inverse_matrix, type='matrix')
 

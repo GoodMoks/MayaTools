@@ -79,3 +79,11 @@ def get_value_range(count, max=1):
     coefficient = max / float(count-1)
 
     return [round(x * coefficient, 5) for x in xrange(count)]
+
+def matrix_round_pymel(matrix, digits):
+    for first_index in xrange(4):
+        for second_index in xrange(4):
+            old = getattr(matrix, 'a{}{}'.format(first_index, second_index))
+            setattr(matrix, 'a{}{}'.format(first_index, second_index), round(old, digits))
+
+    return matrix

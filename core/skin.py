@@ -21,7 +21,16 @@ def get_skinCluster(obj):
         """
     return base.get_history(obj, type='skinCluster')
 
+def get_bindPose(obj):
+    """ get all bindPoses
 
+        :param obj: 'str' object
+        :return: 'list' of bindPoses
+        """
+    skinCluster = get_skinCluster(obj)
+    if not skinCluster:
+        return None
+    return base.get_history(skinCluster, type='dagPose')
 
 def compare_influence_joints(source, target):
     """ compare influence joints two skinned objects

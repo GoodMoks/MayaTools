@@ -5,8 +5,10 @@ from maya.OpenMaya import MGlobal
 import MayaTools.core.dag as dag
 import MayaTools.core.skin as skin
 import MayaTools.core.mesh as mesh
+import MayaTools.core.utils as utils
 import fit
 
+reload(utils)
 reload(mesh)
 reload(fit)
 reload(dag)
@@ -17,6 +19,12 @@ class FitController(object):
         pass
 
     @staticmethod
+    def calculate_bindPoseMatrix(bindPose):
+        matrix = pm.getAttr('{}.worldMatrix'.format(bindPose))
+        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix if x]
+        return inverse_matrix
+
+    @staticmethod
     def get_selected():
         sel = cmds.ls(sl=True)
         if not sel:
@@ -24,6 +32,13 @@ class FitController(object):
             return
 
         return sel
+
+    @staticmethod
+    def all_matrix_round(matrix):
+        for index, m in enumerate(matrix):
+            matrix[index] = utils.matrix_round_pymel(m, 4)
+
+        return matrix
 
     def get_selected_all(self):
         selected = self.get_selected()
@@ -93,14 +108,18 @@ class FitController(object):
         mesh = selected['mesh']
 
         skinCluster = skin.get_skinCluster(mesh)
+        bindPose = skin.get_bindPose(mesh)
 
-        origin_bindPreMatrix = fit.FitPose.calculate_bindPreMatrix(skinCluster[0])
-        current_bindPreMatrix = pm.getAttr('{}.bindPreMatrix'.format(skinCluster[0]))
+        origin = self.calculate_bindPoseMatrix(bindPose[0])
+        current = pm.getAttr('{}.bindPreMatrix'.format(skinCluster[0]))
 
-        if origin_bindPreMatrix == current_bindPreMatrix:
-            pm.confirmDialog(parent=parent, message='{} this mesh has not changed'.format(mesh))
+        origin_round = self.all_matrix_round(origin)
+        current_round = self.all_matrix_round(current)
+
+        if origin_round == current_round:
+            pm.confirmDialog(parent=parent, message='{} NO CHANGES'.format(mesh))
         else:
-            pm.confirmDialog(parent=parent, message='{} this mesh has been modified.'.format(mesh))
+            pm.confirmDialog(parent=parent, message='{} WAS MODIFIED.'.format(mesh))
 
 # class FitControllerOld(object):
 #
