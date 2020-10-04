@@ -1,8 +1,6 @@
 import maya.cmds as cmds
 import MayaTools.core.base as base
 
-reload(base)
-
 
 def get_influence_joint(obj):
     """ get all influences joints

@@ -73,7 +73,10 @@ def create_follicle(name):
     cmds.setAttr('{}.inheritsTransform'.format(follicle), 0)
     return follicle, follicle_shape
 
-
+def get_joint_display_scale(joint):
+    joint_scale = cmds.jointDisplayScale(query=True)
+    joint_radius = cmds.getAttr('{}.radius'.format(joint))
+    return joint_radius * joint_scale
 
 def get_value_range(count, max=1):
     coefficient = max / float(count-1)

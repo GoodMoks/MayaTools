@@ -11,7 +11,7 @@ class Separator(object):
         self.create_separator()
 
     def create_separator(self):
-        with pm.horizontalLayout(p=self.parent, w=self.width, h=self.height) as layout:
+        with pm.horizontalLayout(p=self.parent, w=self.width, h=self.height, ) as layout:
             pm.separator()
             pm.text(self.label)
             pm.separator()
