@@ -1,11 +1,14 @@
 import pymel.core as pm
 import maya.cmds as cmds
+import maya.mel as mel
+import MayaTools.core.logger as logger
 import MayaTools.core.connections as connections
 import MayaTools.core.dag as dag
 import MayaTools.core.skin as skin
 import MayaTools.core.utils as utils
 import MayaTools.core.mesh as core_mesh
 import MayaTools.tools.control_manager.controls as controls
+
 
 class FitPose(object):
     PREFIX_GRP = '_fit_grp'
@@ -20,7 +23,24 @@ class FitPose(object):
     def set_bindPreMatrix(matrix, geo):
         skinCluster = skin.get_skinCluster(geo)
         for index, m in enumerate(matrix):
-            pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), m, type='matrix')
+            try:
+                pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), m, type='matrix')
+            except:
+                pass
+
+    @staticmethod
+    def get_all_bindPoseMatrix(mesh):
+        joints = skin.get_influence_joint(mesh)
+        matrix = list([pm.getAttr('{}.bindPose'.format(joint)) for joint in joints])
+        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix if x]
+        return inverse_matrix
+
+    @staticmethod
+    def all_matrix_round(matrix):
+        for index, m in enumerate(matrix):
+            matrix[index] = utils.matrix_round_pymel(m, 4)
+
+        return matrix
 
     def __init__(self, mesh, joints=None):
         self.mesh = mesh
@@ -30,6 +50,10 @@ class FitPose(object):
 
         if not self.joints:
             self.get_bind_joints()
+
+        # self.reset_bindPose()
+
+        print 'init FitPose'
 
     def check_arguments(self):
         if not isinstance(self.mesh, basestring):
@@ -70,23 +94,55 @@ class FitPose(object):
 
     def reset(self):
         skinCluster = skin.get_skinCluster(self.mesh)
-        bindPose = skin.get_bindPose(self.mesh)
-        if self.joints:
-            for joint in self.joints:
-                if pm.objExists('{}{}'.format(joint, FitObjects.PREFIX)):
-                    fit_object = '{}{}'.format(joint, FitObjects.PREFIX)
-                    cmds.delete(fit_object)
 
-                index = connections.get_index_common_connections(joint, bindPose[0], attr='bindPose')
-                matrix = pm.getAttr('{}.worldMatrix[{}]'.format(bindPose[0], index))
-                inverse_matrix = pm.datatypes.Matrix(matrix).inverse()
-                pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index), inverse_matrix, type='matrix')
+        for joint in self.joints:
+            if pm.objExists('{}{}'.format(joint, FitObjects.PREFIX)):
+                cmds.delete('{}{}'.format(joint, FitObjects.PREFIX))
+
+            index_skinCluster = connections.get_index_common_connections(joint, skinCluster[0], attr='worldMatrix')
+            matrix = pm.getAttr('{}.bindPose'.format(joint))
+            inverse_matrix = pm.datatypes.Matrix(matrix).inverse()
+            pm.setAttr('{}.bindPreMatrix[{}]'.format(skinCluster[0], index_skinCluster), inverse_matrix, type='matrix')
 
         if pm.objExists('{}{}'.format(self.mesh, self.PREFIX_GRP)):
             fit_grp = '{}{}'.format(self.mesh, self.PREFIX_GRP)
             fit_children = dag.get_children(fit_grp)
             if not fit_children:
                 cmds.delete(fit_grp)
+
+    def check(self):
+        skinCluster = skin.get_skinCluster(self.mesh)
+
+        origin = self.get_all_bindPoseMatrix(self.mesh)
+        current = pm.getAttr('{}.bindPreMatrix'.format(skinCluster[0]))
+
+        origin_round = self.all_matrix_round(origin)
+        current_round = self.all_matrix_round(current)
+
+        if origin_round == current_round:
+            return True
+        else:
+            return False
+
+    def reset_bindPose(self):
+        bindPose = skin.get_bindPose(self.mesh)[0]
+        new_bindPose = pm.duplicate(bindPose)[0]
+
+        temp_members = []
+        for joint in self.joints:
+            index = connections.get_index_common_connections(joint, bindPose, attr='message')
+            grp = cmds.createNode('transform')
+            temp_members.append(grp)
+            cmds.connectAttr('{}.message'.format(grp), '{}.members[{}]'.format(new_bindPose, index))
+
+        pm.dagPose(r=True, n=new_bindPose)
+
+        for grp, jnt in zip(temp_members, self.joints):
+            grp_worldMatrix = pm.getAttr('{}.worldMatrix'.format(grp))
+            joint_parentMatrix = pm.getAttr('{}.parentMatrix'.format(jnt))
+            pm.setAttr('{}.bindPose'.format(jnt), (grp_worldMatrix * joint_parentMatrix))
+
+        pm.delete([new_bindPose, temp_members])
 
     def add(self):
         FitObjects(joints=self.joints, mesh=self.mesh)
@@ -122,10 +178,9 @@ class FitObjects(object):
     def build(self):
         self.create_fit_grp()
         self.skinCluster = skin.get_skinCluster(self.mesh)[0]
-        self.bindPose = skin.get_bindPose(self.mesh)[0]
         for joint in self.joints:
-            index = connections.get_index_common_connections(joint, self.skinCluster, attr='worldMatrix')
-            if not index:
+            index_skinCluster = connections.get_index_common_connections(joint, self.skinCluster, attr='worldMatrix')
+            if not index_skinCluster:
                 continue
 
             joint_scale = utils.get_joint_display_scale(joint)
@@ -138,10 +193,9 @@ class FitObjects(object):
             joint_worldMarix = pm.getAttr('{}.worldMatrix'.format(joint))
             joint_worldInverseMatrix = pm.getAttr('{}.worldInverseMatrix'.format(joint))
 
-            bindPreMatrix = pm.getAttr('{}.bindPreMatrix[{}]'.format(self.skinCluster, index))
+            bindPreMatrix = pm.getAttr('{}.bindPreMatrix[{}]'.format(self.skinCluster, index_skinCluster))
 
-            index = connections.get_index_common_connections(joint, self.bindPose, attr='bindPose')
-            bindPose_matrix = pm.getAttr('{}.worldMatrix[{}]'.format(self.bindPose, index))
+            bindPose_matrix = pm.getAttr('{}.bindPose'.format(joint))
             bindPose_inverse_matrix = pm.datatypes.Matrix(bindPose_matrix).inverse()
 
             object_matrix = (bindPose_matrix * bindPreMatrix * joint_worldMarix)
@@ -152,6 +206,7 @@ class FitObjects(object):
             pm.connectAttr('{}.worldMatrix'.format(fit_object), '{}.matrixIn[1]'.format(mult_node))
             pm.setAttr('{}.matrixIn[2]'.format(mult_node), joint_worldInverseMatrix, type='matrix')
 
-            pm.connectAttr('{}.matrixSum'.format(mult_node), '{}.bindPreMatrix[{}]'.format(self.skinCluster, index))
+            pm.connectAttr('{}.matrixSum'.format(mult_node),
+                           '{}.bindPreMatrix[{}]'.format(self.skinCluster, index_skinCluster))
 
         self.restore_hierarchy()

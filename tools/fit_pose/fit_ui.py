@@ -2,6 +2,8 @@ import pymel.core as pm
 import fit_controller
 import MayaTools.core.ui.separator as separator
 
+reload(fit_controller)
+
 class FitUI(object):
     WINDOW_NAME = 'FitPose'
     WIDTH = 150
@@ -26,6 +28,8 @@ class FitUI(object):
                                           ann='Select Fit geometry to check for changes ')
                     bindPose_btn = pm.button(label='bindPose', c=pm.Callback(self.controller.go_to_bindPose),
                                           ann='Select Fit geometry to check for changes ')
+                    reset_bindPose = pm.button(label='reset_bindPose', c=pm.Callback(self.controller.reset_bidnPose),
+                                             ann='Select Fit geometry to check for changes ')
                     separator.Separator('Joints', parent=main_ly, w=self.WIDTH, h=20)
                 with pm.horizontalLayout():
                     add_btn = pm.button(label='Add', c=pm.Callback(self.controller.add),

@@ -4,19 +4,14 @@ import maya.cmds as cmds
 import maya.mel as mel
 from maya.OpenMaya import MGlobal
 import MayaTools.core.dag as dag
-import MayaTools.core.skin as skin
-import MayaTools.core.utils as utils
 import fit
+
+reload(fit)
+
 
 class FitController(object):
     def __init__(self):
         pass
-
-    @staticmethod
-    def calculate_bindPoseMatrix(bindPose):
-        matrix = pm.getAttr('{}.worldMatrix'.format(bindPose))
-        inverse_matrix = [pm.datatypes.Matrix(x).inverse() for x in matrix if x]
-        return inverse_matrix
 
     @staticmethod
     def get_selected():
@@ -26,13 +21,6 @@ class FitController(object):
             return
 
         return sel
-
-    @staticmethod
-    def all_matrix_round(matrix):
-        for index, m in enumerate(matrix):
-            matrix[index] = utils.matrix_round_pymel(m, 4)
-
-        return matrix
 
     def get_selected_all(self):
         selected = self.get_selected()
@@ -99,21 +87,13 @@ class FitController(object):
         if not selected:
             return
 
-        mesh = selected['mesh']
+        pose = fit.FitPose(mesh=selected['mesh'])
+        result = pose.check()
 
-        skinCluster = skin.get_skinCluster(mesh)
-        bindPose = skin.get_bindPose(mesh)
-
-        origin = self.calculate_bindPoseMatrix(bindPose[0])
-        current = pm.getAttr('{}.bindPreMatrix'.format(skinCluster[0]))
-
-        origin_round = self.all_matrix_round(origin)
-        current_round = self.all_matrix_round(current)
-
-        if origin_round == current_round:
-            pm.confirmDialog(parent=parent, message='{} NO CHANGES'.format(mesh))
+        if result:
+            pm.confirmDialog(parent=parent, message='{} NO CHANGES'.format(selected['mesh']))
         else:
-            pm.confirmDialog(parent=parent, message='{} WAS MODIFIED.'.format(mesh))
+            pm.confirmDialog(parent=parent, message='{} WAS MODIFIED.'.format(selected['mesh']))
 
     def go_to_bindPose(self):
         selected = self.filter_selected()
@@ -124,4 +104,10 @@ class FitController(object):
         cmds.select(mesh)
         mel.eval('GoToBindPose')
 
+    def reset_bidnPose(self):
+        selected = self.filter_selected()
+        if not selected:
+            return
 
+        pose = fit.FitPose(mesh=selected['mesh'], joints=selected['joint'])
+        pose.reset_bindPose()
