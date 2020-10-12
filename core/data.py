@@ -1,7 +1,7 @@
 import os
 import json
 import maya.api.OpenMaya as om2
-
+import MayaTools.data as data
 
 class JsonData(object):
     def __init__(self, file_path):
@@ -54,10 +54,9 @@ class JsonData(object):
 
 
 class CurveShapeData(JsonData):
-    # FILE_NAME = 'control_manager.json'
-    # FILE_PATH = os.path.join(os.path.dirname(__file__), FILE_NAME)
-
-    FILE_PATH = 'E:\Work\Pipeline\Projects\Tools\MayaTools\data\controls.json'
+    path = data.__path__[0]
+    FILE_PATH = os.path.join(path, 'controls.json')
+    print FILE_PATH, 'LOL'
 
     def __init__(self):
         super(CurveShapeData, self).__init__(self.FILE_PATH)
