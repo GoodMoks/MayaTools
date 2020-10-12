@@ -135,6 +135,7 @@ def createCurve(name='', control='circle'):
         nameFile = 'control_manager.json'
         path = os.path.join(baseDir, nameFile)
 
+
         with open(path) as f:
             control = json.load(f)[control]
 
@@ -174,7 +175,7 @@ def addNumber(name):
             return newName
 
 
-def defaultPrefix(name):
+def defaultPrefix(name, prefix=None):
     """ Deletes the prefix at the end of the line
 
     :param name: 'str' name of object
@@ -183,21 +184,18 @@ def defaultPrefix(name):
     if not name:
         return []
 
-    # Default prefix
-    prefixList = ['Jnt', 'jnt', 'JNT', 'ctrl', 'Ctrl', 'CTRL', 'loc', 'Loc', 'LOC',
-                  'IK', 'ik', 'Ik', 'grp', 'Grp', 'GRP']
+    if not prefix:
+        prefix = ['jnt', 'ctrl', 'loc', 'Ik', 'grp']
 
-    # Remove All ends prefix
-    definePrefix = [x for x in prefixList if name.endswith(x)]
+    definePrefix = [x for x in prefix if re.search(x, name, re.IGNORECASE)]
 
-    # Delete prefix
     if definePrefix:
-        name = re.sub('{}$'.format(definePrefix[0]), '', name)
-
-    # Delete undescore at the line
-    if name.endswith('_'):
-        name = re.sub('_$', '', name)
-
+        split_name = re.sub('{}$'.format(definePrefix[0]), '', name, flags=re.I)
+        if split_name:
+            if split_name.endswith('_'):
+                clear_name = re.sub('_$', '', split_name)
+                return clear_name
+            return split_name
     return name
 
 

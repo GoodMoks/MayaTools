@@ -1,9 +1,11 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.base as base
+import MayaTools.core.dag as dag
 import MayaTools.core.attribute as attribute
 import re
 
+reload(dag)
 
 def is_face(component):
     """ check component for face
@@ -12,6 +14,18 @@ def is_face(component):
     :return: new 'list' only with faces
     """
     return cmds.filterExpand(component, ex=True, sm=34)
+
+def is_mesh(obj):
+    """ checks if it's polygon mesh
+
+        :param obj: 'str' name of mesh
+        :return: 'bool' True if it's mesh
+        """
+    shapes = dag.get_shapes(str(obj), skip=True)
+    shapes = shapes[0] if shapes else None
+
+    if shapes:
+        return True if cmds.nodeType(shapes) == 'mesh' else None
 
 
 def get_center_face(face):

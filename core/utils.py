@@ -51,6 +51,16 @@ def time_info(func):
     return timeRun
 
 
+def chunk_decorator(func):
+    cmds.undoInfo(openChunk=True)
+
+    def function(*func_args, **func_kwargs):
+        return func(*func_args, **func_kwargs)
+
+    cmds.undoInfo(closeChunk=True)
+    return function
+
+
 def create_follicle(name):
     """ create follicle
     :param name: 'str' name for follicle
@@ -63,9 +73,20 @@ def create_follicle(name):
     cmds.setAttr('{}.inheritsTransform'.format(follicle), 0)
     return follicle, follicle_shape
 
-
+def get_joint_display_scale(joint):
+    joint_scale = cmds.jointDisplayScale(query=True)
+    joint_radius = cmds.getAttr('{}.radius'.format(joint))
+    return joint_radius * joint_scale
 
 def get_value_range(count, max=1):
     coefficient = max / float(count-1)
 
     return [round(x * coefficient, 5) for x in xrange(count)]
+
+def matrix_round_pymel(matrix, digits):
+    for first_index in xrange(4):
+        for second_index in xrange(4):
+            old = getattr(matrix, 'a{}{}'.format(first_index, second_index))
+            setattr(matrix, 'a{}{}'.format(first_index, second_index), round(old, digits))
+
+    return matrix

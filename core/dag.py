@@ -17,13 +17,14 @@ def get_children(obj, all=False, shapes=False):
             return [c for c in child if not base.is_shape(c)]
         return child
 
-def get_shapes(obj):
+def get_shapes(obj, skip=True):
     """ get shapes for given object
 
     :param obj: 'str' object
+    :param skip: 'bool' skip intermediate objects
     :return: 'list' with shapes or []
     """
-    return cmds.listRelatives(obj, s=True)
+    return cmds.listRelatives(obj, s=True, ni=skip)
 
 def get_parent(obj, all=False):
     """ get parents for given objects
@@ -35,3 +36,14 @@ def get_parent(obj, all=False):
     """
 
     return cmds.listRelatives(obj, p=True, ap=all, shapes=False)
+
+
+def object_type(obj):
+    shapes = get_shapes(obj)
+    if not shapes:
+        return cmds.objectType(obj)
+
+    return cmds.objectType(shapes[0])
+
+
+
