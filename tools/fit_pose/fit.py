@@ -1,12 +1,11 @@
 import pymel.core as pm
 import maya.cmds as cmds
-import maya.mel as mel
-import MayaTools.core.logger as logger
-import MayaTools.core.connections as connections
 import MayaTools.core.dag as dag
+import MayaTools.core.base as base
 import MayaTools.core.skin as skin
 import MayaTools.core.utils as utils
 import MayaTools.core.mesh as core_mesh
+import MayaTools.core.connections as connections
 import MayaTools.tools.control_manager.controls as controls
 
 
@@ -51,7 +50,7 @@ class FitPose(object):
         if not self.joints:
             self.get_bind_joints()
 
-        # self.reset_bindPose()
+        #self.reset_bindPose()
 
         print 'init FitPose'
 
@@ -126,23 +125,26 @@ class FitPose(object):
 
     def reset_bindPose(self):
         bindPose = skin.get_bindPose(self.mesh)[0]
-        new_bindPose = pm.duplicate(bindPose)[0]
 
-        temp_members = []
-        for joint in self.joints:
-            index = connections.get_index_common_connections(joint, bindPose, attr='message')
-            grp = cmds.createNode('transform')
-            temp_members.append(grp)
-            cmds.connectAttr('{}.message'.format(grp), '{}.members[{}]'.format(new_bindPose, index))
+        # joints = cmds.listConnections('{}.members'.format(bindPose), t='joint')
+        # for joint in joints:
+        #     index = connections.get_index_common_connections(joint, bindPose, 'message')
+        #     matrix = cmds.getAttr('{}.xformMatrix[{}]'.format(bindPose, index))
+        #     cmds.setAttr('{}.bindPose'.format(joint), matrix, type='matrix')
 
-        pm.dagPose(r=True, n=new_bindPose)
+        duplicate = cmds.duplicate(bindPose, rc=True, un=True)
 
-        for grp, jnt in zip(temp_members, self.joints):
-            grp_worldMatrix = pm.getAttr('{}.worldMatrix'.format(grp))
-            joint_parentMatrix = pm.getAttr('{}.parentMatrix'.format(jnt))
-            pm.setAttr('{}.bindPose'.format(jnt), (grp_worldMatrix * joint_parentMatrix))
+        copy_bindPose = duplicate[0]
 
-        pm.delete([new_bindPose, temp_members])
+        joints = cmds.listConnections('{}.members'.format(bindPose), t='joint')
+        copy_joints = cmds.listConnections('{}.members'.format(copy_bindPose), t='joint')
+
+        pm.dagPose(r=True, n=copy_bindPose)
+        for copy, source in zip(copy_joints, joints):
+            joint_parentMatrix = cmds.getAttr('{}.worldMatrix'.format(copy))
+            cmds.setAttr('{}.bindPose'.format(source), joint_parentMatrix, t='matrix')
+
+        cmds.delete(duplicate)
 
     def add(self):
         FitObjects(joints=self.joints, mesh=self.mesh)
