@@ -90,3 +90,12 @@ def matrix_round_pymel(matrix, digits):
             setattr(matrix, 'a{}{}'.format(first_index, second_index), round(old, digits))
 
     return matrix
+
+def numbers_list_round(matrix, digits):
+    for index in xrange(len(matrix)):
+        matrix[index] = round(matrix[index], digits)
+
+    return matrix
+
+def recompose_matrix(matrix):
+    return list([data for data in matrix])

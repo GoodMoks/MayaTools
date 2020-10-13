@@ -66,6 +66,21 @@ class FitController(object):
         pose = fit.FitPose(mesh=selected['mesh'], joints=selected['joint'])
         pose.add()
 
+    def add_modified(self):
+        selected = self.filter_selected()
+        if not selected:
+            return
+
+        pose = fit.FitPose(mesh=selected['mesh'])
+        joints = pose.check()
+
+        if not joints:
+            om2.MGlobal.displayInfo('No changed bones')
+            return
+
+        pose = fit.FitPose(mesh=selected['mesh'], joints=joints)
+        pose.add()
+
     def update(self):
         selected = self.filter_selected()
         if not selected:
@@ -88,9 +103,9 @@ class FitController(object):
             return
 
         pose = fit.FitPose(mesh=selected['mesh'])
-        result = pose.check()
+        joints = pose.check()
 
-        if result:
+        if not joints:
             pm.confirmDialog(parent=parent, message='{} NO CHANGES'.format(selected['mesh']))
         else:
             pm.confirmDialog(parent=parent, message='{} WAS MODIFIED.'.format(selected['mesh']))

@@ -1,5 +1,7 @@
 import pymel.core as pm
+import maya.cmds as cmds
 import maya.OpenMaya as om
+import maya.api.OpenMaya as om2
 
 """ Module for work with transform """
 
@@ -28,3 +30,5 @@ def get_rotate_pivot(obj):
     transform_fn = om.MFnTransform(obj)
     rotate_pivot = transform_fn.rotatePivot(om.MSpace.kWorld)
     return om.MVector(rotate_pivot.x, rotate_pivot.y, rotate_pivot.z)
+
+
