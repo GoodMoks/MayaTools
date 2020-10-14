@@ -7,7 +7,8 @@ reload(curve)
 class ControlCurve(object):
     def __init__(self, control, name=None, size=None,
                  matrix=None, align=None, scale=False,
-                 world=True, prefix='_CTRL', align_name=True):
+                 world=True, prefix='_CTRL', align_name=True,
+                 color=None):
         self.name = name
         self.control = control
         self.size = size
@@ -17,6 +18,7 @@ class ControlCurve(object):
         self.world = world
         self.prefix = prefix
         self.align_name = align_name
+        self.color = color
 
         self.curve = None
         self.shape = None
