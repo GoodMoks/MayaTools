@@ -9,7 +9,7 @@ def addNumber(name):
     """ Adds count number to line end
 
     :param name: 'str' name of object
-    :return: 'str' new name with number at the end
+    :return: 'str' New name with number at the end
     """
     number = 0
     exist = False
@@ -64,7 +64,7 @@ def renamePrefix(name=None, prefix='', underscore=True):
     :param name: 'str' name of object
     :param prefix: 'str' prefix
     :param underscore: 'bool' add underscore or not
-    :return: 'str' new name
+    :return: 'str' New name
     """
     if name:
         nameSplit = name.split('.')[0]
@@ -263,7 +263,7 @@ class CopyFace(object):
             sourceObjName = self.sourceFace[0].split('.')[0]
             self.sourceMesh = sourceObjName
 
-            # Create new name for duplicate object
+            # Create New name for duplicate object
             newName = renamePrefix(name=sourceObjName, prefix='proxy')
 
             # Duplicate obj and set name of duplicate mesh

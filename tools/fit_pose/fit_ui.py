@@ -21,7 +21,7 @@ class FitUI(object):
                 separator.Separator('Pose', parent=main_ly, w=self.WIDTH, h=20)
                 with pm.horizontalLayout():
                     update_btn = pm.button(label='Update', c=pm.Callback(self.controller.update),
-                                           ann='Select Fit geometry to delete all fit joint and set new pose')
+                                           ann='Select Fit geometry to delete all fit joint and set New pose')
                     reset_btn = pm.button(label='Reset', c=pm.Callback(self.controller.reset),
                                           ann='Select Fit geometry to reset all fit changes')
                     check_btn = pm.button(label='Check', c=pm.Callback(self.controller.check, self.window),

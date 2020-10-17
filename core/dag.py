@@ -11,7 +11,8 @@ def get_children(obj, all=False, shapes=False):
     :param shapes: 'bool' False: skip all shapes node
     :return: 'list' of children or []
     """
-    child = cmds.listRelatives(obj, c=True, ad=all)
+
+    child = cmds.listRelatives(obj, c=True, ad=all, path=True)
     if child:
         if not shapes:
             return [c for c in child if not base.is_shape(c)]
@@ -24,7 +25,7 @@ def get_shapes(obj, skip=True):
     :param skip: 'bool' skip intermediate objects
     :return: 'list' with shapes or []
     """
-    return cmds.listRelatives(obj, s=True, ni=skip)
+    return cmds.listRelatives(obj, s=True, ni=skip, path=True)
 
 def get_parent(obj, all=False):
     """ get parents for given objects
@@ -34,8 +35,11 @@ def get_parent(obj, all=False):
     :param all: 'bool' True: get all parents in hierarchy
     :return: 'list' with parents or []
     """
+    if not all:
+        return cmds.listRelatives(obj, p=True, shapes=False, path=True)
 
-    return cmds.listRelatives(obj, p=True, ap=all, shapes=False)
+    if all:
+        return get_top_parent(obj)
 
 
 def object_type(obj):
@@ -45,5 +49,18 @@ def object_type(obj):
 
     return cmds.objectType(shapes[0])
 
+def get_top_parent(obj):
+    parent = cmds.listRelatives(obj, ap=True, shapes=False, path=True)
+    if not parent:
+        return obj
+    return get_top_parent(parent[0])
 
 
+def get_all_parent(obj, parents=[]):
+    parent = cmds.listRelatives(obj, ap=True, shapes=False, path=True)
+    if not parent:
+        parents.append(obj)
+        return parents
+
+    parents.append(obj)
+    return get_top_parent(parent[0])

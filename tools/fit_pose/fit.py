@@ -90,6 +90,7 @@ class FitPose(object):
             cmds.delete(fit_grp)
             self.set_bindPreMatrix(matrix, self.mesh)
 
+
     def reset(self):
         skinCluster = skin.get_skinCluster(self.mesh)
 
@@ -122,8 +123,8 @@ class FitPose(object):
             bindPose = om2.MMatrix(cmds.getAttr('{}.bindPose'.format(joint))).inverse()
             preBind = om2.MMatrix(cmds.getAttr('{}.bindPreMatrix[{}]'.format(skinCluster, index)))
 
-            bindPose_round = utils.numbers_list_round(bindPose, 4)
-            preBind_round = utils.numbers_list_round(preBind, 4)
+            bindPose_round = utils.numbers_list_round(bindPose, 2)
+            preBind_round = utils.numbers_list_round(preBind, 2)
 
             if not bindPose_round == preBind_round:
                 dif.append(joint)
@@ -187,7 +188,7 @@ class FitObjects(object):
                 continue
 
             joint_scale = utils.get_joint_display_scale(joint)
-            curve = controls.ControlCurve('sphere', name=joint, prefix=self.PREFIX, size=joint_scale)
+            curve = controls.ControlCurve('sphere', name=joint, suffix=self.PREFIX, size=joint_scale*2, color=(1, 0, 0))
             fit_object = curve.create()[0]
             self.fit_objects.append(fit_object)
             cmds.parent(str(fit_object), self.fit_grp)

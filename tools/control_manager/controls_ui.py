@@ -5,6 +5,7 @@ from PySide2 import QtWidgets
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.ui.QMessageBox as message
+import MayaTools.core.ui.color_widget as color
 import MayaTools.tools.control_manager.controls as controls
 import MayaTools.core.curve as curve
 
@@ -12,6 +13,7 @@ reload(controls)
 reload(message)
 reload(curve)
 reload(data)
+reload(color)
 
 """
 #import MayaTools.tools.control_manager.controls_ui as ui
@@ -19,6 +21,7 @@ reload(data)
 from MayaTools.tools.control_manager.controls_ui import ControlsUI
 ControlsUI().showUI()
 """
+
 
 class ControlsController(object):
     def __init__(self):
@@ -31,7 +34,7 @@ class ControlsController(object):
         return names
 
     @staticmethod
-    def create_control(items, name, scale, size, world, prefix):
+    def create_control(items, name, scale, size, world, suffix, color):
         cmds.undoInfo(openChunk=True)
 
         selection = cmds.ls(sl=True)
@@ -39,13 +42,13 @@ class ControlsController(object):
             for sel in selection:
                 for i in items:
                     control_curve = controls.ControlCurve(control=i.text(), align=sel, align_name=name, scale=scale,
-                                                          size=size, world=world, prefix=prefix)
+                                                          size=size, world=world, suffix=suffix, color=color)
                     control_curve.create()
 
         else:
             for i in items:
                 control_curve = controls.ControlCurve(control=i.text(), scale=scale, size=size,
-                                                      world=world, prefix=prefix)
+                                                      world=world, suffix=suffix, color=color)
                 control_curve.create()
 
         cmds.undoInfo(closeChunk=True)
@@ -114,7 +117,8 @@ class ControlsUI(QtWidgets.QDialog):
         self.object_name_cb.setCheckState(QtCore.Qt.Checked)
         self.world_matrix_cb = QtWidgets.QCheckBox('World Location')
         self.world_matrix_cb.setCheckState(QtCore.Qt.Checked)
-        self.prefix_le = QtWidgets.QLineEdit('_CTRL')
+        self.suffix_le = QtWidgets.QLineEdit('_CTRL')
+        self.color_btn = color.ColorWidget()
         self.size_spin = QtWidgets.QDoubleSpinBox()
         self.size_spin.setValue(1)
 
@@ -130,9 +134,12 @@ class ControlsUI(QtWidgets.QDialog):
         self.options_checkBox_ly = QtWidgets.QHBoxLayout()
         self.options_ly = QtWidgets.QVBoxLayout()
         self.prefix_scale_ly = QtWidgets.QHBoxLayout()
-        self.prefix_ly = QtWidgets.QFormLayout()
-        self.prefix_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
-        self.prefix_ly.addRow('Prefix', self.prefix_le)
+        self.suffix_ly = QtWidgets.QFormLayout()
+        self.suffix_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
+        self.suffix_ly.addRow('Suffix', self.suffix_le)
+        self.color_ly = QtWidgets.QFormLayout()
+        self.color_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
+        self.color_ly.addRow('Color', self.color_btn)
         self.size_ly = QtWidgets.QFormLayout()
         self.size_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
         self.size_ly.addRow('Size', self.size_spin)
@@ -147,7 +154,8 @@ class ControlsUI(QtWidgets.QDialog):
         self.options_checkBox_ly.addWidget(self.object_name_cb)
         self.options_checkBox_ly.addWidget(self.world_matrix_cb)
         self.options_ly.addLayout(self.options_checkBox_ly)
-        self.prefix_scale_ly.addLayout(self.prefix_ly)
+        self.prefix_scale_ly.addLayout(self.suffix_ly)
+        self.prefix_scale_ly.addLayout(self.color_ly)
         self.prefix_scale_ly.addLayout(self.size_ly)
         self.options_ly.addLayout(self.prefix_scale_ly)
         self.options_group_box.setLayout(self.options_ly)
@@ -162,8 +170,6 @@ class ControlsUI(QtWidgets.QDialog):
         self.delete_btn.clicked.connect(self.delete_control)
         self.control_list_wdg.itemDoubleClicked.connect(self.item_clicked)
         self.control_list_wdg.itemChanged.connect(self.edit_item)
-
-        self.options_group_box.clicked.connect(self.hide_group)
 
     def get_all_items_name(self):
         items = []
@@ -183,9 +189,6 @@ class ControlsUI(QtWidgets.QDialog):
             self.filter_list(filter)
         else:
             self.filter_list(self.names)
-
-    def hide_group(self, *args):
-        print args, 'args'
 
     def update_list(self):
         self.names = self.controller.get_all_control_names()
@@ -246,8 +249,12 @@ class ControlsUI(QtWidgets.QDialog):
         world = True if self.world_matrix_cb.checkState() == QtCore.Qt.CheckState.Checked else False
         name = True if self.object_name_cb.checkState() == QtCore.Qt.CheckState.Checked else False
 
+        color = self.color_btn.get_color()
+        if color:
+            color = color.getRgbF()[:-1]
+
         self.controller.create_control(selected_item, scale=scale, size=self.size_spin.value(),
-                                       world=world, prefix=self.prefix_le.text(), name=name)
+                                       world=world, suffix=self.suffix_le.text(), name=name, color=color)
 
     def delete_control(self):
         selected_item = self.control_list_wdg.selectedItems()

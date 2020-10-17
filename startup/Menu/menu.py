@@ -2,21 +2,26 @@ import os
 import pymel.core as pm
 import MayaTools
 
+NAME = 'AnimStudio'
+
+
 class Menu(object):
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(MayaTools.__file__)))
 
     @staticmethod
-    def get_parent_package_name(filepath):
+    def get_parent(filepath):
         return os.path.basename(os.path.dirname(filepath))
 
     @staticmethod
-    def get_main_package_name(filepath):
+    def get_main(filepath):
         return os.path.basename(filepath)
 
     @staticmethod
     def install_submenu(label, parent, tearOff=True):
-        return pm.menuItem(parent=parent, subMenu=True,
+        menu = pm.menuItem(parent=parent, subMenu=True,
                            tearOff=tearOff, label=label)
+
+        return menu
 
     @staticmethod
     def install_item(items, parent):
@@ -32,11 +37,11 @@ class Menu(object):
         if pm.menu(menu, exists=True):
             pm.deleteUI(menu)
 
-        pm.menu(menu,
-                parent="MayaWindow",
-                tearOff=True,
-                allowOptionBoxes=True,
-                label=menu)
+        menu = pm.menu(menu,
+                       parent="MayaWindow",
+                       tearOff=True,
+                       allowOptionBoxes=True,
+                       label=menu)
 
         return menu
 
@@ -55,22 +60,22 @@ class Menu(object):
         return '.'.join(items)
 
     def restore_menu(self, path):
-        name = self.get_main_package_name(path)
+        name = self.get_main(path)
         if not self.name:
             self.name = name.capitalize()
 
-        self.main_parent_dir = self.get_parent_package_name(path)
+        self.main_parent_dir = self.get_parent(path)
         self.main_import_path = self.get_root_dir(path)
         self.name = self.create(self.name)
         self.test_load_menu(path, self.main_import_path)
 
     def create_item(self, path, commands):
-        parent = self.get_parent_package_name(path)
-        main = self.get_main_package_name(path)
+        parent = self.get_parent(path)
+        main = self.get_main(path)
         if parent == self.main_parent_dir:
             main = self.name
-        self.parents[main.capitalize()] = self.install_menu(main.capitalize(), commands,
-                                                            self.parents.get(parent.capitalize(), self.name))
+
+        self.parents[main] = self.install_menu(main, commands, self.parents.get(parent, self.name))
 
     def install_menu(self, label, items, parent):
         menu = self.name
@@ -79,10 +84,7 @@ class Menu(object):
 
         self.install_item(items=items, parent=menu)
 
-        if menu:
-            return menu
-
-        return parent
+        return menu
 
     def test_load_menu(self, path, parent):
         for root, dirs, files in os.walk(path, True, None):
@@ -102,3 +104,8 @@ class Menu(object):
                 self.test_load_menu(new_path, new_parent)
 
             break
+
+
+def create_menu():
+    path = os.path.dirname(__file__)
+    Menu(path, name=NAME)
