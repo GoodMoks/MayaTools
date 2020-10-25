@@ -1,6 +1,4 @@
 import os
-import pymel.core as pm
-import MayaTools
 import MayaTools.tools.menu_creator.menu as menu
 reload(menu)
 
