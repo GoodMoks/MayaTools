@@ -1,13 +1,16 @@
 import maya.cmds as cmds
 import MayaTools.core.curve as curve
+import MayaTools.core.utils as utils
 
+reload(utils)
 reload(curve)
 
 
 class ControlCurve(object):
     def __init__(self, control, name=None, size=None,
                  matrix=None, align=None, scale=False,
-                 world=True, prefix='_CTRL', align_name=True):
+                 world=True, suffix='_CTRL', align_name=True,
+                 color=None):
         self.name = name
         self.control = control
         self.size = size
@@ -15,8 +18,9 @@ class ControlCurve(object):
         self.align = align
         self.scale = scale
         self.world = world
-        self.prefix = prefix
+        self.prefix = suffix
         self.align_name = align_name
+        self.color = color
 
         self.curve = None
         self.shape = None
@@ -67,6 +71,9 @@ class ControlCurve(object):
 
             if not self.matrix and self.align:
                 self.align_object()
+
+        if self.color:
+            utils.ColorObject(obj=self.curve, color=self.color)
 
         cmds.undoInfo(closeChunk=True)
 

@@ -63,7 +63,7 @@ def restore_skin(source, target):
 
     :param source: 'str' object with skin
     :param target: 'str' object without skin
-    :return: new skinCluster
+    :return: New skinCluster
     """
     joints = get_influence_joint(source)
     max_inf = cmds.skinCluster(get_skinCluster(source), q=True, mi=True)

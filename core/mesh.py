@@ -11,7 +11,7 @@ def is_face(component):
     """ check component for face
 
     :param component: 'list' of components
-    :return: new 'list' only with faces
+    :return: New 'list' only with faces
     """
     return cmds.filterExpand(component, ex=True, sm=34)
 

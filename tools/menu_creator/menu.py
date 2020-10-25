@@ -2,28 +2,27 @@ import os
 import pymel.core as pm
 import MayaTools
 
+
 class Menu(object):
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(MayaTools.__file__)))
 
     @staticmethod
-    def get_parent_package_name(filepath):
+    def get_parent(filepath):
         return os.path.basename(os.path.dirname(filepath))
 
     @staticmethod
-    def get_main_package_name(filepath):
-        return os.path.basename(filepath)
-
-    @staticmethod
     def install_submenu(label, parent, tearOff=True):
-        return pm.menuItem(parent=parent, subMenu=True,
-                           tearOff=tearOff, label=label)
+        menu = pm.menuItem(parent=parent, subMenu=True,
+                           tearOff=tearOff, label=label, ia='')
+
+        return menu
 
     @staticmethod
     def install_item(items, parent):
         pm.setParent(parent, m=True)
         for label, command in items:
             if not command:
-                pm.menuItem(divider=True)
+                pm.menuItem(divider=True, ld=True, label=label)
                 continue
             pm.menuItem(label=label, command=command)
 
@@ -32,11 +31,11 @@ class Menu(object):
         if pm.menu(menu, exists=True):
             pm.deleteUI(menu)
 
-        pm.menu(menu,
-                parent="MayaWindow",
-                tearOff=True,
-                allowOptionBoxes=True,
-                label=menu)
+        menu = pm.menu(menu,
+                       parent="MayaWindow",
+                       tearOff=True,
+                       allowOptionBoxes=True,
+                       label=menu)
 
         return menu
 
@@ -45,32 +44,32 @@ class Menu(object):
         self.name = name
         self.parents = dict()
 
-        self.main_parent_dir = None
+        self.main_parent = None
         self.main_import_path = None
 
         self.restore_menu(self.path)
 
-    def get_root_dir(self, path):
+    def get_main_import(self, path):
         items = os.path.relpath(path, self.ROOT_DIR).split('\\')
         return '.'.join(items)
 
     def restore_menu(self, path):
-        name = self.get_main_package_name(path)
+        name = os.path.basename(path)
         if not self.name:
             self.name = name.capitalize()
 
-        self.main_parent_dir = self.get_parent_package_name(path)
-        self.main_import_path = self.get_root_dir(path)
+        self.main_parent = self.get_parent(path)
+        self.main_import_path = self.get_main_import(path)
         self.name = self.create(self.name)
-        self.test_load_menu(path, self.main_import_path)
+        self.load_menu(path, self.main_import_path)
 
     def create_item(self, path, commands):
-        parent = self.get_parent_package_name(path)
-        main = self.get_main_package_name(path)
-        if parent == self.main_parent_dir:
+        parent = self.get_parent(path)
+        main = os.path.basename(path)
+        if parent == self.main_parent:
             main = self.name
-        self.parents[main.capitalize()] = self.install_menu(main.capitalize(), commands,
-                                                            self.parents.get(parent.capitalize(), self.name))
+
+        self.parents[main] = self.install_menu(main, commands, self.parents.get(parent, self.name))
 
     def install_menu(self, label, items, parent):
         menu = self.name
@@ -79,12 +78,9 @@ class Menu(object):
 
         self.install_item(items=items, parent=menu)
 
-        if menu:
-            return menu
+        return menu
 
-        return parent
-
-    def test_load_menu(self, path, parent):
+    def load_menu(self, path, parent):
         for root, dirs, files in os.walk(path, True, None):
             for f in files:
                 if f.endswith(".py"):
@@ -99,6 +95,7 @@ class Menu(object):
             for d in dirs:
                 new_path = '{}/{}'.format(path, d)
                 new_parent = '{}.{}'.format(parent, d)
-                self.test_load_menu(new_path, new_parent)
+                self.load_menu(new_path, new_parent)
 
             break
+

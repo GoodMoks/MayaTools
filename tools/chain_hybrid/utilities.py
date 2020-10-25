@@ -128,7 +128,7 @@ def createCurve(name='', control='circle'):
 
     :param name: 'str' name object
     :param control: 'str' shape of the curves
-    :return: 'str' new object
+    :return: 'str' New object
     """
     if isinstance(name, basestring) and isinstance(control, basestring):
         baseDir = os.path.dirname(__file__)
@@ -153,7 +153,7 @@ def addNumber(name):
     """ Adds count number to line end
 
     :param name: 'str' name of object
-    :return: 'str' new name with number at the end
+    :return: 'str' New name with number at the end
     """
     number = 0
     exist = False
@@ -205,7 +205,7 @@ def renamePrefix(name=None, prefix='', underscore=True):
     :param name: 'str' name of object
     :param prefix: 'str' prefix
     :param underscore: 'bool' add underscore or not
-    :return: 'str' new name
+    :return: 'str' New name
     """
     if name:
         nameSplit = name.split('.')[0]

@@ -57,10 +57,10 @@ class Goal(object):
         # disconnect main constraint from obj
         connections.disconnect_objects(self.obj, self.main_constraint, channels=self.channels)
 
-        # create new constraint
+        # create New constraint
         self.new_constraint = getattr(pm, self.type_constraint)(self.dynamic_loc, self.obj, mo=True, weight=True)
 
-        # disconnect new constraint from obj
+        # disconnect New constraint from obj
         connections.disconnect_objects(self.obj, self.new_constraint, channels=self.channels)
 
         # create pair node and set interpolation method

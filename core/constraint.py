@@ -51,7 +51,7 @@ def get_target_constraint(constraint):
 def restore_constraint(source, target, offset=True):
     """ make copy constraint connections
 
-    version with create new constraint
+    version with create New constraint
 
     :param source: 'str' name obj
     :param target: 'str' name obj

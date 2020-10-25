@@ -56,7 +56,6 @@ class JsonData(object):
 class CurveShapeData(JsonData):
     path = data.__path__[0]
     FILE_PATH = os.path.join(path, 'controls.json')
-    print FILE_PATH, 'LOL'
 
     def __init__(self):
         super(CurveShapeData, self).__init__(self.FILE_PATH)

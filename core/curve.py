@@ -53,7 +53,7 @@ class CurveManager(object):
         """ create nurbsCurve of a given type
 
         :param curve_type: 'str' name type of curve (circle, cube, star)
-        :param name: 'str' name for new curve
+        :param name: 'str' name for New curve
         :return: 'list' [transform, curve shape]
         """
         controls_data = data.CurveShapeData()
@@ -72,7 +72,7 @@ class CurveManager(object):
 
     @staticmethod
     def export(nurbsCurve, overwrite=True):
-        """ add new nurbsCurve parameters to database
+        """ add New nurbsCurve parameters to database
 
         :param nurbsCurve: 'str' name of exist nurbsCurve
         :param overwrite: 'bool' if exist given nurbsCurve in base
@@ -101,7 +101,7 @@ class CurveManager(object):
         """ change name nurbsCurve in database
 
         :param old: 'str' old name
-        :param new: 'str' new name
+        :param new: 'str' New name
         :return: 'bool' if is successful
         """
         shape_data = data.CurveShapeData()
