@@ -3,6 +3,7 @@ import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.tools.joint_converter.converter as converter
 
+reload(converter)
 
 class JointConverterUI(object):
     MAIN_NAME = 'ConvertJoint'

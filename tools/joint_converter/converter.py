@@ -53,8 +53,12 @@ class JointConverter(object):
 
         distance = vector.get_distance(source=joint, target=parent[0])
         height = distance - self.joint_radius * 2
+        middle_radius = self.middle_radius
+        if distance < self.joint_radius * 2:
+            middle_radius = self.middle_radius / 2
+            height = distance
 
-        cone = cmds.polyCone(r=self.middle_radius, sa=4, h=height, ch=False)[0]
+        cone = cmds.polyCone(r=middle_radius, sa=4, h=height, ch=False)[0]
         cmds.delete(cmds.pointConstraint([joint, parent[0]], cone, mo=False))
         cmds.delete(cmds.aimConstraint(joint, cone, mo=False, aim=(0, 1, 0), u=(1, 0, 0), wuo=parent[0]))
 
