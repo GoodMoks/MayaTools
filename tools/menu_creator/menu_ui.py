@@ -5,7 +5,6 @@ from PySide2 import QtGui
 import MayaTools.core.ui.utils_qt as utils_qt
 
 
-
 class MenuEditor(QtWidgets.QDialog):
 
     @staticmethod
@@ -19,9 +18,53 @@ class MenuEditor(QtWidgets.QDialog):
         qt_obj = utils_qt.convert_pymel_to_qt(executer)
         return executer, qt_obj
 
+    @staticmethod
+    def showUI():
+        try:
+            ui.close()
+            ui.deleteLater()  # pylint: disable=used-before-assignment
+        except:
+            pass
+
+        ui = MenuEditor()
+        ui.show()
+
     MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
 
     PATH = r'E:\Work\Pipeline\MayaTools\tools\menu_creator\menu'
+
+    ITEM_DATA = dict(
+        label='Item',
+        type='item',
+        language='Mel',
+        text='',
+        divider=False
+    )
+
+    CONFIG = dict(
+        submenu=dict(
+            label='Submenu',
+            size=14,
+            color=QtGui.QColor(255, 0, 0),
+            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
+                  QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
+        ),
+        item=dict(
+            label='Item',
+            size=14,
+            color=QtGui.QColor(0, 255, 0),
+            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
+                  QtCore.Qt.ItemIsDragEnabled,
+        ),
+        divider=dict(
+            label='----------',
+            size=12,
+            color=QtGui.QColor(200, 200, 200),
+            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
+                  QtCore.Qt.ItemIsDragEnabled
+        )
+
+    )
 
     def __init__(self, parent=MAYA):
         super(MenuEditor, self).__init__(parent)
@@ -34,6 +77,8 @@ class MenuEditor(QtWidgets.QDialog):
         self.create_widgets()
         self.create_layout()
         self.make_connections()
+
+        self.menu_data = {}
 
         print '__init__'
 
@@ -189,23 +234,73 @@ class MenuEditor(QtWidgets.QDialog):
         self.menu_tree.itemSelectionChanged.connect(self.select_item)
         self.languages_btn.buttonClicked.connect(self.change_language)
         self.execute_btn.clicked.connect(self.execute)
+        self.delete_btn.clicked.connect(self.delete_item)
+        self.save_btn.clicked.connect(self.save)
+        self.divider.stateChanged.connect(self.divider_item)
 
-    def get_current_languages(self):
-        if self.mel_radio.isChecked():
-            return 'MEL'
-        elif self.python_radio.isChecked():
-            return 'Python'
+    """  BUTTON CONNECTIONS """
 
-    def execute(self):
-        lang = self.get_current_languages()
-        if lang == 'MEL':
-            self.scripts_exec_mel.executeAll()
-        elif lang == 'Python':
-            self.scripts_exec_python.executeAll()
+    def add_item(self):
+        config = self.CONFIG['item']
+        item = QtWidgets.QTreeWidgetItem([config['label']])
+        item.setFlags(config['flags'])
+        font = QtGui.QFont()
+        font.setPixelSize(config['size'])
+        item.setFont(0, font)
+        item.setTextColor(0, config['color'])
+
+        self.ITEM_DATA['label'] = 'Item'
+        self.ITEM_DATA['type'] = 'item'
+
+        item.setData(0, QtCore.Qt.UserRole, self.ITEM_DATA)
+        self.menu_tree.addTopLevelItem(item)
+
+    def add_submenu(self):
+        config = self.CONFIG['submenu']
+        item = QtWidgets.QTreeWidgetItem([config['label']])
+        item.setFlags(config['flags'])
+        font = QtGui.QFont()
+        font.setPixelSize(config['size'])
+        item.setFont(0, font)
+        item.setTextColor(0, config['color'])
+
+        self.ITEM_DATA['label'] = 'Submenu'
+        self.ITEM_DATA['type'] = 'submenu'
+
+        item.setData(0, QtCore.Qt.UserRole, self.ITEM_DATA)
+        self.menu_tree.addTopLevelItem(item)
+
+    def select_item(self, *args):
+        item = self.get_selected()
+        if not item:
+            self.divider.setCheckState(QtCore.Qt.Unchecked)
+            self.label.setText('')
+            self.enabled_widgets(False)
+            return
+
+        data = item.data(0, QtCore.Qt.UserRole)
+
+        # update divider
+        if data['divider']:
+            self.divider.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.divider.setCheckState(QtCore.Qt.Unchecked)
+
+        # update text
+        self.label.setText(data['label'])
+
+        # enable all widgets
+        self.enabled_widgets(True)
+
+        # enable divider checkBox
+        self.divider.setEnabled(True)
+        if item.childCount():
+            self.divider.setCheckState(QtCore.Qt.Unchecked)
+            self.divider.setEnabled(False)
 
     def change_language(self):
         lang = self.get_current_languages()
-        if lang == 'MEL':
+        if lang == 'Mel':
             self.python_script.hide()
             self.mel_script.show()
             self.scripts_exec_mel.getSourceType()
@@ -215,10 +310,71 @@ class MenuEditor(QtWidgets.QDialog):
             self.python_script.show()
             self.scripts_exec_python.getSourceType()
 
-    def enabled_widgets(self, state):
-        widgets = [self.python_radio, self.mel_radio, self.execute_btn, self.scripts_tab]
-        for w in widgets:
-            w.setEnabled(state)
+    def execute(self):
+        lang = self.get_current_languages()
+        if lang == 'Mel':
+            self.scripts_exec_mel.executeAll()
+        elif lang == 'Python':
+            self.scripts_exec_python.executeAll()
+
+    def delete_item(self):
+        selected = self.menu_tree.selectedItems()
+        if not selected:
+            return
+
+        for item in selected:
+            parent = item.parent() or self.menu_tree.invisibleRootItem()
+            parent.takeChild(self.menu_tree.indexFromItem(item).row())
+
+    def save(self):
+        print 'SAVE'
+
+    def divider_item(self):
+        state = self.divider.isChecked()
+        item = self.get_selected()
+        data = item.data(0, QtCore.Qt.UserRole)
+        if state == data['divider']:
+            return
+
+        if not state:
+            self.cancel_divider(item)
+            return
+
+        self.apply_divider(item)
+
+    """  FUNCTIONAL  """
+
+    def apply_divider(self, item):
+        data = item.data(0, QtCore.Qt.UserRole)
+        data['divider'] = True
+        item.setData(0, QtCore.Qt.UserRole, data)
+        config = self.CONFIG['divider']
+        item = self.get_selected()
+        label = self.label.text()
+        if not label:
+            label = 'Divider'
+        item.setTextColor(0, config['color'])
+        font = QtGui.QFont()
+        font.setPixelSize(config['size'])
+        item.setFont(0, font)
+        item.setText(0, '{}{}'.format(label, config['label']))
+
+    def cancel_divider(self, item):
+        data = item.data(0, QtCore.Qt.UserRole)
+        data['divider'] = False
+        item.setData(0, QtCore.Qt.UserRole, data)
+        config = self.CONFIG[data['type']]
+        item.setTextColor(0, config['color'])
+        font = QtGui.QFont()
+        font.setPixelSize(config['size'])
+        item.setFont(0, font)
+        item.setText(0, config['label'])
+
+    def get_current_languages(self):
+        if self.mel_radio.isChecked():
+            return 'Mel'
+        elif self.python_radio.isChecked():
+            return 'Python'
 
     def get_selected(self):
         selected = self.menu_tree.selectedItems()
@@ -226,39 +382,7 @@ class MenuEditor(QtWidgets.QDialog):
             return
         return selected[0]
 
-    def select_item(self, *args):
-        selected = self.get_selected()
-        if not selected:
-            self.label.setText('')
-            self.enabled_widgets(False)
-            return
-        self.label.setText(selected.data(0, QtCore.Qt.UserRole))
-        self.enabled_widgets(True)
-
-    def add_item(self):
-        item = QtWidgets.QTreeWidgetItem(['Item'])
-        item.setFlags(
-            QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
-            QtCore.Qt.ItemIsDragEnabled)
-        item.setTextColor(0, QtGui.QColor(0, 255, 0))
-        item.setData(0, QtCore.Qt.UserRole, 'Item')
-        self.menu_tree.addTopLevelItem(item)
-
-    def add_submenu(self):
-        item = QtWidgets.QTreeWidgetItem(['Sub Menu'])
-        item.setFlags(
-            QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
-            QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
-        item.setTextColor(0, QtGui.QColor(255, 0, 0))
-        item.setData(0, QtCore.Qt.UserRole, 'sunmenu')
-        self.menu_tree.addTopLevelItem(item)
-
-    def showUI(self):
-        try:
-            ui.close()
-            ui.deleteLater()  # pylint: disable=used-before-assignment
-        except:
-            pass
-
-        ui = MenuEditor()
-        ui.show()
+    def enabled_widgets(self, state):
+        widgets = [self.python_radio, self.mel_radio, self.execute_btn, self.scripts_tab]
+        for w in widgets:
+            w.setEnabled(state)
