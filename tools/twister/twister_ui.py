@@ -6,6 +6,8 @@ from MayaTools.core.ui import qtFloatSlider
 
 import twister_contoller
 
+reload(twister_contoller)
+
 
 class TwisterUI(QtWidgets.QDialog):
     MAYA_WINDOW = pm.ui.PyUI('MayaWindow').asQtObject()

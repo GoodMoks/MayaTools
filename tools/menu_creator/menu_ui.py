@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import pymel.core as pm
 from PySide2 import QtWidgets
 from PySide2 import QtCore
@@ -5,14 +6,99 @@ from PySide2 import QtGui
 import MayaTools.core.ui.utils_qt as utils_qt
 
 
+class ScriptEditor(QtWidgets.QWidget):
+    @staticmethod
+    def get_script_editor(python=False):
+        pm.window()
+        pm.columnLayout()
+        executer = pm.cmdScrollFieldExecuter()
+        if python:
+            executer = pm.cmdScrollFieldExecuter(sourceType="python", commandCompletion=False, showTooltipHelp=False)
 
-class ScriptEditor():
-    def __init__(self):
-        pass
+        qt_obj = utils_qt.convert_pymel_to_qt(executer)
+        return executer, qt_obj
 
+    def __init__(self, parent=None, python=True):
+        super(ScriptEditor, self).__init__(parent)
+        self.python = python
+
+        self.build()
+        self.make_connections()
+
+        if python:
+            self.python_radio.setChecked(True)
+            self.mel_widget.hide()
+        else:
+            self.mel_radio.setChecked(True)
+            self.python_widget.hide()
+
+    def build(self):
+        self.python_radio = QtWidgets.QRadioButton('Python')
+        self.mel_radio = QtWidgets.QRadioButton('MEL')
+        self.languages_btn = QtWidgets.QButtonGroup()
+        self.languages_btn.addButton(self.python_radio)
+        self.languages_btn.addButton(self.mel_radio)
+
+        self.exec_python, self.edit_python = self.get_script_editor(python=True)
+        self.exec_mel, self.edit_mel = self.get_script_editor(python=False)
+
+        self.python_widget = QtWidgets.QWidget()
+        self.mel_widget = QtWidgets.QWidget()
+
+        self.languages_ly = QtWidgets.QHBoxLayout()
+        self.languages_ly.setSpacing(50)
+        self.languages_ly.setAlignment(QtCore.Qt.AlignCenter)
+        self.languages_ly.addWidget(self.mel_radio)
+        self.languages_ly.addWidget(self.python_radio)
+
+        self.edit_mel_ly = QtWidgets.QHBoxLayout()
+        self.edit_mel_ly.setContentsMargins(0, 0, 0, 0)
+        self.edit_mel_ly.addWidget(self.edit_mel)
+        self.mel_widget.setLayout(self.edit_mel_ly)
+
+        self.edit_python_ly = QtWidgets.QHBoxLayout()
+        self.edit_python_ly.setContentsMargins(0, 0, 0, 0)
+        self.edit_python_ly.addWidget(self.edit_python)
+        self.python_widget.setLayout(self.edit_python_ly)
+
+        self.execute_btn = QtWidgets.QPushButton('Execute')
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(':/execute.png'))
+        self.execute_btn.setIcon(icon)
+
+        self.main_ly = QtWidgets.QVBoxLayout()
+        self.main_ly.setContentsMargins(0, 0, 0, 0)
+        self.main_ly.addLayout(self.languages_ly)
+        self.main_ly.addWidget(self.python_widget)
+        self.main_ly.addWidget(self.mel_widget)
+        self.main_ly.addWidget(self.execute_btn)
+
+        self.setLayout(self.main_ly)
+
+    def make_connections(self):
+        self.languages_btn.buttonClicked.connect(self.change_language)
+        self.execute_btn.clicked.connect(self.execute)
+
+    def change_language(self):
+        lang = self.get_current_languages()
+        if lang == 'Mel':
+            self.python_widget.hide()
+            self.mel_widget.show()
+            print self.exec_mel.getSourceType()
+
+        elif lang == 'Python':
+            self.mel_widget.hide()
+            self.python_widget.show()
+            print self.exec_python.getSourceType()
+
+    def get_current_languages(self):
+        if self.mel_radio.isChecked():
+            return 'Mel'
+        elif self.python_radio.isChecked():
+            return 'Python'
 
     def execute(self):
-        pass
+        print 'Execute'
 
     def set_text(self, python=False):
         pass
@@ -25,6 +111,43 @@ class ScriptEditor():
 
     def get_state(self, python=False):
         pass
+
+
+class QHLine(QtWidgets.QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+
+class CustomTreeWidget(QtWidgets.QTreeWidget):
+    def __init__(self, parent=None):
+        super(CustomTreeWidget, self).__init__(parent)
+        self.itemEntered.connect(self.get_item_widget)
+
+
+    def add_item(self):
+        print 'CHANGE'
+
+    def add_submenu(self):
+        pass
+
+    def delete(self):
+        pass
+
+    def add_divider(self):
+        item = self.selectedItems()[0]
+        label = QtWidgets.QLabel('label')
+        self.setItemWidget(item, 0, label)
+
+    def get_item_widget(self, *args):
+        print 'ENTERED'
+        item = self.selectedItems()
+        self.widget = self.itemWidget(item[0], 0)
+
+
+
+
 
 
 class MenuEditor(QtWidgets.QDialog):
@@ -79,7 +202,7 @@ class MenuEditor(QtWidgets.QDialog):
                   QtCore.Qt.ItemIsDragEnabled,
         ),
         divider=dict(
-            label='----------',
+            label='―――――――――――――――――――――',
             size=12,
             color=QtGui.QColor(200, 200, 200),
             flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
@@ -128,7 +251,7 @@ class MenuEditor(QtWidgets.QDialog):
         self.delete_menu_btn.setIcon(icon)
 
         # menu tree widget
-        self.menu_tree = QtWidgets.QTreeWidget()
+        self.menu_tree = CustomTreeWidget()
         self.menu_tree.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.menu_tree.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.menu_tree.setHeaderHidden(True)
@@ -148,27 +271,6 @@ class MenuEditor(QtWidgets.QDialog):
         # check box divider
         self.divider = QtWidgets.QCheckBox('Divider')
 
-        # languages radio button
-        self.python_radio = QtWidgets.QRadioButton('Python')
-        self.python_radio.setChecked(True)
-        self.mel_radio = QtWidgets.QRadioButton('MEL')
-        self.languages_btn = QtWidgets.QButtonGroup()
-        self.languages_btn.addButton(self.python_radio)
-        self.languages_btn.addButton(self.mel_radio)
-
-        # create execute and edit widget for scripts editor
-        self.exec_python, self.edit_python = self.get_script_editor(python=True)
-        self.exec_mel, self.edit_mel = self.get_script_editor(python=False)
-
-        self.python_widget = QtWidgets.QWidget()
-        self.mel_widget = QtWidgets.QWidget()
-
-        # execute button
-        self.execute_btn = QtWidgets.QPushButton('Execute')
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(':/execute.png'))
-        self.execute_btn.setIcon(icon)
-
         # menu and options widget
         self.menu_tree_widget = QtWidgets.QWidget()
         self.options_widget = QtWidgets.QWidget()
@@ -177,6 +279,20 @@ class MenuEditor(QtWidgets.QDialog):
         # save and cancel button
         self.save_btn = QtWidgets.QPushButton('Save')
         self.cancel_btn = QtWidgets.QPushButton('Cancel')
+
+        self.command = ScriptEditor(python=True)
+        self.option_box = ScriptEditor(python=True)
+
+        self.option_box_cb = QtWidgets.QCheckBox()
+        self.scripts_group_box = QtWidgets.QTabWidget()
+        self.scripts_group_box.setStyleSheet("""
+                                                QTabWidget::pane{
+                                                        border: none;
+                                                }
+                                                QTabBar::tab{
+                                                        min-width: 40ex;
+                                                }
+                                            """)
 
     def create_layout(self):
         self.main_ly = QtWidgets.QVBoxLayout(self)
@@ -216,39 +332,12 @@ class MenuEditor(QtWidgets.QDialog):
         self.label_divider_ly.addLayout(self.label_ly)
         self.label_divider_ly.addWidget(self.divider)
 
-        # languages layout for mel and python radio buttons
-        self.languages_ly = QtWidgets.QHBoxLayout()
-        self.languages_ly.setSpacing(50)
-        self.languages_ly.setAlignment(QtCore.Qt.AlignCenter)
-        self.languages_ly.addWidget(self.mel_radio)
-        self.languages_ly.addWidget(self.python_radio)
-
-        # layout for edit MEL widget
-        self.edit_mel_ly = QtWidgets.QHBoxLayout()
-        self.edit_mel_ly.setContentsMargins(0, 0, 0, 0)
-        self.edit_mel_ly.addWidget(self.edit_mel)
-        self.mel_widget.setLayout(self.edit_mel_ly)
-
-        # hide MEl widget
-        self.mel_widget.hide()
-
-        # layout for edit PYTHON widget
-        self.edit_python_ly = QtWidgets.QHBoxLayout()
-        self.edit_python_ly.setContentsMargins(0, 0, 0, 0)
-        self.edit_python_ly.addWidget(self.edit_python)
-        self.python_widget.setLayout(self.edit_python_ly)
-
-        # layout for scripts editor and languages buttons
-        self.scripts_ly = QtWidgets.QVBoxLayout()
-        self.scripts_ly.addLayout(self.languages_ly)
-        self.scripts_ly.addWidget(self.python_widget)
-        self.scripts_ly.addWidget(self.mel_widget)
-        self.scripts_ly.addWidget(self.execute_btn)
-
-        # group box for scripts editor
-        self.scripts_group_box = QtWidgets.QGroupBox('Command')
-        self.scripts_group_box.setAlignment(QtCore.Qt.AlignCenter)
-        self.scripts_group_box.setLayout(self.scripts_ly)
+        self.scripts_group_box.addTab(self.command, 'Command')
+        self.scripts_group_box.addTab(self.option_box, 'Option Box')
+        tab_bar = self.scripts_group_box.tabBar()
+        tab_bar.setExpanding(True)
+        tab_bar.setTabEnabled(1, False)
+        tab_bar.setTabButton(1, QtWidgets.QTabBar.LeftSide, self.option_box_cb)
 
         # add label and sripts editor to options layout
         self.options_ly.addLayout(self.label_divider_ly)
@@ -275,11 +364,10 @@ class MenuEditor(QtWidgets.QDialog):
         self.add_item_btn.clicked.connect(self.add_item)
         self.add_submenu_btn.clicked.connect(self.add_submenu)
         self.menu_tree.itemSelectionChanged.connect(self.select_item)
-        self.languages_btn.buttonClicked.connect(self.change_language)
-        self.execute_btn.clicked.connect(self.execute)
         self.delete_btn.clicked.connect(self.delete_item)
         self.save_btn.clicked.connect(self.save)
         self.divider.stateChanged.connect(self.divider_item)
+        self.option_box_cb.stateChanged.connect(self.apply_option_box)
 
     """  BUTTON CONNECTIONS """
 
@@ -385,9 +473,16 @@ class MenuEditor(QtWidgets.QDialog):
 
         self.apply_divider(item)
 
+    def apply_option_box(self, *args):
+        if self.option_box_cb.checkState() == QtCore.Qt.CheckState.Unchecked:
+            self.scripts_group_box.setTabEnabled(1, False)
+        else:
+            self.scripts_group_box.setTabEnabled(1, True)
+
     """  FUNCTIONAL  """
 
     def apply_divider(self, item):
+        #self.menu_tree.add_divider()
         data = item.data(0, QtCore.Qt.UserRole)
         data['divider'] = True
         item.setData(0, QtCore.Qt.UserRole, data)
@@ -395,7 +490,7 @@ class MenuEditor(QtWidgets.QDialog):
         item = self.get_selected()
         label = self.label.text()
         if not label:
-            label = 'Divider'
+            label = ''
         item.setTextColor(0, config['color'])
         font = QtGui.QFont()
         font.setPixelSize(config['size'])
@@ -413,12 +508,6 @@ class MenuEditor(QtWidgets.QDialog):
         item.setFont(0, font)
         item.setText(0, config['label'])
 
-    def get_current_languages(self):
-        if self.mel_radio.isChecked():
-            return 'Mel'
-        elif self.python_radio.isChecked():
-            return 'Python'
-
     def get_selected(self):
         selected = self.menu_tree.selectedItems()
         if not len(selected) == 1:
@@ -426,6 +515,6 @@ class MenuEditor(QtWidgets.QDialog):
         return selected[0]
 
     def enabled_widgets(self, state):
-        widgets = [self.python_radio, self.mel_radio, self.execute_btn, self.scripts_group_box]
+        widgets = [self.command.python_radio, self.command.mel_radio, self.command.execute_btn, self.scripts_group_box]
         for w in widgets:
             w.setEnabled(state)
