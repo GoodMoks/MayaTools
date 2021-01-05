@@ -5,6 +5,7 @@ import maya.OpenMaya as om
 import MayaTools.core.base as base
 import instance_shape_controller
 import instance_shape
+import PySide2
 
 reload(base)
 reload(instance_shape_controller)
@@ -199,6 +200,8 @@ class InstanceShapeUI(QtWidgets.QDialog):
 
     def check_item(self, widget, item):
         """ check exist item """
+        print item, 'item'
+        print widget
         if widget.findItems(item, QtCore.Qt.MatchFlag):
             return True
         else:

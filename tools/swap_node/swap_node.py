@@ -36,7 +36,7 @@ class SwapNode(object):
             type = pm.nodeType(node)
             if type not in self.pass_type:
                 if type == 'transform':
-                    all_child = dag.get_children(node)
+                    all_child = dag.get_children(str(node))
                     if all_child:
                         for child in all_child:
                             if not pm.nodeType(child) in self.pass_type:
@@ -58,7 +58,7 @@ class SwapNode(object):
             pm.parent(self.source, w=True)
 
     def move_child(self):
-        child = dag.get_children(self.source)
+        child = dag.get_children(str(self.source))
         if child:
             filter_child = self.filter_nodes(child)
             if filter_child:

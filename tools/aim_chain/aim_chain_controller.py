@@ -83,7 +83,8 @@ class AimChainController(object):
 
                 temp_constraints.append(pm.parentConstraint(objects[index], obj, mo=False))
 
-            parent = dag.get_parent(objects[0])[0]
+            parent = dag.get_parent(str(objects[0]))
+            print parent
             pm.parent(new_objects[0], parent)
             self.bake_result(new_objects)
             pm.delete(temp_constraints)

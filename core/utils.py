@@ -15,6 +15,7 @@ def create_goal(obj, base_name, prefix=None, w=0.5):
     :param w: weight goal
     :return: locator, particle
     """
+
     if prefix:
         base_name = '{}_{}'.format(base_name, prefix)
     pos = cmds.xform(obj, piv=True, q=True, ws=True)

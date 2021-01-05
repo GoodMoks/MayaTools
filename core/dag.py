@@ -3,16 +3,17 @@ import MayaTools.core.base as base
 
 """ Module for work with DAG hierarchy """
 
-def get_children(obj, all=False, shapes=False):
+def get_children(obj, all=False, shapes=False, type=[]):
     """ get children for given object
 
     :param obj: 'str' object
     :param all: 'bool' True: get all children in hierarchy
     :param shapes: 'bool' False: skip all shapes node
+    :param type: 'bool' False: skip all shapes node
     :return: 'list' of children or []
     """
 
-    child = cmds.listRelatives(obj, c=True, ad=all, path=True)
+    child = cmds.listRelatives(obj, c=True, ad=all, path=True, type=type)
     if child:
         if not shapes:
             return [c for c in child if not base.is_shape(c)]

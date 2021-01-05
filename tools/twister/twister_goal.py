@@ -7,6 +7,7 @@ import MayaTools.core.utils as particle
 import MayaTools.core.vector as vector
 import MayaTools.core.dag as dag
 
+reload(particle)
 
 class Goal(object):
     """ Main class for goal system """

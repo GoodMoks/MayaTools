@@ -31,4 +31,3 @@ def get_rotate_pivot(obj):
     rotate_pivot = transform_fn.rotatePivot(om.MSpace.kWorld)
     return om.MVector(rotate_pivot.x, rotate_pivot.y, rotate_pivot.z)
 
-

@@ -1,6 +1,7 @@
 import pymel.core as pm
 import aim_chain_controller
 
+reload(aim_chain_controller)
 
 class AimChainUI(object):
     WINDOW_NAME = 'AimChaim'

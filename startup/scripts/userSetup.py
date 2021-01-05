@@ -24,3 +24,4 @@ def add_menu():
 
 
 maya.utils.executeDeferred(initialize)
+
