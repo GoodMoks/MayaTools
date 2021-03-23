@@ -69,7 +69,7 @@ class MakeSlide(object): # WIP
         self.slide.create()
 
     def create_item(self):
-        value = utils.get_value_range(7, 1)
+        value = utils.get_value_range(4, 1)
         for number, v in enumerate(value):
             item = slide.SlideItem(curve=self.curve, parameter=v, prefix=str(number))
             self.slide.set_item(item)
