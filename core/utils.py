@@ -46,7 +46,7 @@ def time_info(func):
         result = func(*args, **kwargs)
         end = time.time()
 
-        print 'Time: {}'.format(end - start)
+        print('Time: {}'.format(end - start))
 
         return result
 
@@ -83,18 +83,18 @@ def get_joint_display_scale(joint):
 def get_value_range(count, max=1):
     coefficient = max / float(count-1)
 
-    return [round(x * coefficient, 5) for x in xrange(count)]
+    return [round(x * coefficient, 5) for x in range(count)]
 
 def matrix_round_pymel(matrix, digits):
-    for first_index in xrange(4):
-        for second_index in xrange(4):
+    for first_index in range(4):
+        for second_index in range(4):
             old = getattr(matrix, 'a{}{}'.format(first_index, second_index))
             setattr(matrix, 'a{}{}'.format(first_index, second_index), round(old, digits))
 
     return matrix
 
 def numbers_list_round(matrix, digits):
-    for index in xrange(len(matrix)):
+    for index in range(len(matrix)):
         matrix[index] = round(matrix[index], digits)
 
     return matrix
@@ -122,7 +122,7 @@ class ColorObject(object):
         self.set_color()
 
     def check_arguments(self):
-        if not isinstance(self.obj, basestring):
+        if not isinstance(self.obj, str):
             raise AttributeError('Object must be a string')
 
         if not cmds.objExists(self.obj):

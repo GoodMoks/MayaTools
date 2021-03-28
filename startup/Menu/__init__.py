@@ -1,4 +1,4 @@
 commands = [
-    ('PUSH ME', 'python("import pymel.core as pm")'),
+    ('PUSH ME', 'python("import pymel.utils as pm")'),
     ('fwf', 'source "pose2shelf"')
 ]

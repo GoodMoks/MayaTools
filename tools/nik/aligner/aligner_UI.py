@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-import MayaTools.tools.aligner.aligner as aligner
+import MayaTools.tools.nik.aligner.aligner as aligner
 
 reload(aligner)
 

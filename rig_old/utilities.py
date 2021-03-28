@@ -17,7 +17,7 @@ def timeInfo(func):
         result = func(*args, **kw)
         end = time.time()
 
-        print 'Time: {}'.format(end - start)
+        print('Time: {}'.format(end - start))
 
         return result
 
@@ -34,7 +34,7 @@ def flatten_list(obj=None):
     :return: 'generator'
     """
     if obj:
-        if isinstance(obj, basestring):
+        if isinstance(obj, str):
             obj = [obj]
 
     if obj:
@@ -105,7 +105,7 @@ def nullGrp(obj=None, prefix='Con', typeNode='transform', underscore=True):
 
     if isinstance(obj, list):
         for object in obj:
-            if isinstance(object, basestring):
+            if isinstance(object, str):
                 nameGrp = renamePrefix(object, prefix=prefix, underscore=underscore)
 
                 nullGroup = cmds.createNode(typeNode, n=nameGrp)
@@ -130,7 +130,7 @@ def createCurve(name='', control='circle'):
     :param control: 'str' shape of the curves
     :return: 'str' New object
     """
-    if isinstance(name, basestring) and isinstance(control, basestring):
+    if isinstance(name, str) and isinstance(control, str):
         baseDir = os.path.dirname(__file__)
         nameFile = 'control_manager.json'
         path = os.path.join(baseDir, nameFile)

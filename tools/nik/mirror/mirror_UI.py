@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-import MayaTools.tools.mirror.mirror as mirror
+import MayaTools.tools.nik.mirror.mirror as mirror
 
 reload(mirror)
 

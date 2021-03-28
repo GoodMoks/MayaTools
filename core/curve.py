@@ -34,7 +34,7 @@ def connect_curve_to_objects(curve, objects=None):
             return False
 
     controls = []
-    for cv_index in xrange(count_point):
+    for cv_index in range(count_point):
         if objects:
             ctrl = objects[cv_index]
         else:

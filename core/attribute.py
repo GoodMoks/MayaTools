@@ -22,11 +22,6 @@ def has_attr(obj, attr):
     return dep_node.hasAttribute(attr)
 
 
-# def is_proxy_attr(obj, attr):
-#     m_obj = base.get_MObject(obj)
-#     dep_node = om2.MFnDependencyNode(m_obj)
-#     return dep_node.a
-
 
 def add_attr(obj, attr, dv=0.5, min=0.0, max=1.0, at='double', en=None):
     """ add attr to object

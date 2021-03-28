@@ -1,8 +1,6 @@
 import pymel.core as pm
 import MayaTools.core.base as base
 import MayaTools.core.transform as transform
-reload(base)
-reload(transform)
 
 ''' Module for work with vector, distance, etc. '''
 

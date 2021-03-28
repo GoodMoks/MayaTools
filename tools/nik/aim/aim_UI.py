@@ -1,6 +1,6 @@
 import maya.OpenMaya as om
 import maya.cmds as cmds
-import MayaTools.tools.aim.aim as aim
+import MayaTools.tools.nik.aim.aim as aim
 
 reload(aim)
 

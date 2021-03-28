@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-import MayaTools.tools.chain_breaker.chain_breaker as controller
+import MayaTools.tools.nik.chain_breaker.chain_breaker as controller
 
 reload(controller)
 
