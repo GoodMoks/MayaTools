@@ -5,7 +5,6 @@ import maya.OpenMaya as om
 import MayaTools.core.base as base
 import instance_shape_controller
 import instance_shape
-import PySide2
 
 reload(base)
 reload(instance_shape_controller)

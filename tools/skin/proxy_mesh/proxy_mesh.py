@@ -1,7 +1,6 @@
 import maya.cmds as cmds
-import pymel.core as pm
 import maya.api.OpenMaya as om2
-import MayaTools.tools.proxy_mesh.duplicate_face as duplicate_face
+import MayaTools.tools.skin.proxy_mesh.duplicate_face as duplicate_face
 import MayaTools.core.skin as skin
 import MayaTools.core.mesh as mesh
 

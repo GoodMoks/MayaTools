@@ -1,5 +1,5 @@
 import pymel.core as pm
-import MayaTools.tools.proxy_mesh.proxy_mesh as proxy_mesh
+import MayaTools.tools.skin.proxy_mesh.proxy_mesh as proxy_mesh
 
 class ProxyMeshUI(object):
     MAIN_NAME = 'ProxyMesh'

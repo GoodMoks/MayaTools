@@ -6,7 +6,7 @@ import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
 import MayaTools.core.ui.QMessageBox as message
 import MayaTools.core.ui.color_widget as color
-import MayaTools.tools.control_manager.controls as controls
+import MayaTools.tools.rig.control_manager.controls as controls
 import MayaTools.core.curve as curve
 
 reload(controls)

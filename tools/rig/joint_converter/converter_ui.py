@@ -1,7 +1,7 @@
 import pymel.core as pm
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
-import MayaTools.tools.joint_converter.converter as converter
+import MayaTools.tools.rig.joint_converter.converter as converter
 
 reload(converter)
 

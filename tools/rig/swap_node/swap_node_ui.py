@@ -39,7 +39,7 @@ class SwapNodeUI(object):
         pass_obj_split = self.split_pass_obj(pass_obj)
 
         swap_node.SwapNodeController(parent=parent, parentChild=child,
-                        hierarchy=hierarchy, pass_type=pass_obj_split)
+                                     hierarchy=hierarchy, pass_type=pass_obj_split)
 
     def show(self):
         window = 'SwapNode'

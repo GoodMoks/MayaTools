@@ -6,7 +6,7 @@ import MayaTools.core.skin as skin
 import MayaTools.core.utils as utils
 import MayaTools.core.mesh as core_mesh
 import MayaTools.core.connections as connections
-import MayaTools.tools.control_manager.controls as controls
+import MayaTools.tools.rig.control_manager.controls as controls
 
 
 class FitPose(object):
@@ -188,7 +188,7 @@ class FitObjects(object):
                 continue
 
             joint_scale = utils.get_joint_display_scale(joint)
-            curve = controls.ControlCurve('sphere', name=joint, suffix=self.PREFIX, size=joint_scale*2, color=(1, 0, 0))
+            curve = controls.ControlCurve('sphere', name=joint, suffix=self.PREFIX, size=joint_scale * 2, color=(1, 0, 0))
             fit_object = curve.create()[0]
             self.fit_objects.append(fit_object)
             cmds.parent(str(fit_object), self.fit_grp)

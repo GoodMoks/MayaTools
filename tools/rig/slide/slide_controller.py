@@ -1,8 +1,8 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
-import MayaTools.tools.slide.slide as slide
+import MayaTools.tools.rig.slide.slide as slide
 import MayaTools.core.curve as curve
-import MayaTools.tools.rivet.rivet as rivet
+import MayaTools.tools.rig.rivet.rivet as rivet
 import MayaTools.core.utils as utils
 
 reload(utils)

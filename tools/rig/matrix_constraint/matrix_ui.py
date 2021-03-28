@@ -5,7 +5,7 @@ from PySide2 import QtCore
 import maya.api.OpenMaya as om2
 import MayaTools.core.ui.axes as axes_ui
 import MayaTools.core.ui.separator as separator
-import MayaTools.tools.matrix_constraint.matrix as matrix
+import MayaTools.tools.rig.matrix_constraint.matrix as matrix
 
 reload(matrix)
 reload(axes_ui)
