@@ -18,14 +18,14 @@ def create_goal(obj, base_name, prefix=None, w=0.5):
 
     if prefix:
         base_name = '{}_{}'.format(base_name, prefix)
-    pos = cmds.xform(obj, piv=True, q=True, ws=True)
+    pos = cmds.xform(obj, t=True, q=True, ws=True)
     if not cmds.objExists('{}_particle'.format(base_name)):
         particle = cmds.particle(p=[0, 0, 0], n='{}_particle'.format(base_name))[0]
         cmds.xform(particle, t=pos)
         cmds.setAttr('{}.particleRenderType'.format(particle), 4)
         cmds.goal(particle, g=obj, w=w)
         if not cmds.objExists('{}_goal_transform'.format(base_name)):
-            goal_transform = cmds.spaceLocator(n='{}_goal_transform'.format(base_name))
+            goal_transform = cmds.spaceLocator(n='{}_goal_transform'.format(base_name))[0]
             cmds.connectAttr('{}.worldCentroid'.format(particle), '{}.t'.format(goal_transform))
             return [goal_transform, particle]
         else:
