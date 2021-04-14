@@ -5,7 +5,6 @@ import MayaTools.core.dag as dag
 import MayaTools.core.attribute as attribute
 import re
 
-reload(dag)
 
 def is_face(component):
     """ check component for face

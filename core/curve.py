@@ -5,7 +5,6 @@ import MayaTools.core.utils as utils
 import MayaTools.core.dag as dag
 import MayaTools.core.data as data
 
-reload(data)
 
 def connect_cv_to_object(cv, obj):
     """ connect given cv to object
@@ -34,7 +33,7 @@ def connect_curve_to_objects(curve, objects=None):
             return False
 
     controls = []
-    for cv_index in xrange(count_point):
+    for cv_index in range(count_point):
         if objects:
             ctrl = objects[cv_index]
         else:

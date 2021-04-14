@@ -113,7 +113,6 @@ def is_pymel(obj):
     """
     try:
         module = obj.__module__
-        print module
     except AttributeError:
         try:
             module = obj.__name__

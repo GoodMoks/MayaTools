@@ -1,5 +1,5 @@
 import os
-import MayaTools.tools.menu_creator.menu as menu
+import MayaTools.tools.pipeline.menu_creator.menu as menu
 reload(menu)
 
 

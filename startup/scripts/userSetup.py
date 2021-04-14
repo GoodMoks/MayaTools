@@ -15,7 +15,9 @@ def add_path():
 
     tools_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
     if tools_path not in sys.path:
+        print(tools_path, '------- new path')
         sys.path.append(tools_path)
+    print('add path')
 
 
 def add_menu():

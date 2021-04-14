@@ -6,7 +6,7 @@ def enabled_layer(obj, state):
     :param obj: 'str' object
     :param state: 'bool' value
     """
-    layers = pm.listConnections(obj, t='displayLayer')
+    layers = cmds.listConnections(obj, t='displayLayer')
     if layers:
         for layer in layers:
-            pm.setAttr(layer + '.enabled', state)
+            cmds.setAttr(layer + '.enabled', state)

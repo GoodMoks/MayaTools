@@ -100,7 +100,7 @@ class CurveShapeData(JsonData):
 
     def add_shape(self, key, value, overwrite=False):
         all_shapes = self.get_all_shapes()
-        if all_shapes.has_key(key):
+        if key in all_shapes:
             if not overwrite:
                 return
 
