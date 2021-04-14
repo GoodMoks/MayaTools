@@ -5,7 +5,6 @@ import MayaTools.core.utils as utils
 import MayaTools.core.dag as dag
 import MayaTools.core.data as data
 
-reload(data)
 
 def connect_cv_to_object(cv, obj):
     """ connect given cv to object

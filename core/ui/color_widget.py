@@ -12,10 +12,19 @@ class ColorWidget(QtWidgets.QLabel):
         self._color = color
 
         self.set_size(50, 14)
+        if not color:
+            self.set_color_none()
         self.set_color(color)
+
+
 
     def set_size(self, width, height):
         self.setFixedSize(width, height)
+
+    def set_color_none(self):
+        image = QtGui.QImage(':/RS_disabled_tile.png')
+        pixmap = QtGui.QPixmap.fromImage(image)
+        self.setPixmap(pixmap)
 
     def set_color(self, color):
         color = QtGui.QColor(color)

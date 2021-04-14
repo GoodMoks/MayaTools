@@ -1,6 +1,7 @@
 import pymel.core as pm
 import maya.cmds as cmds
 from PySide2 import QtCore
+from PySide2 import QtGui
 from PySide2 import QtWidgets
 import maya.api.OpenMaya as om2
 import MayaTools.core.data as data
@@ -8,12 +9,12 @@ import MayaTools.core.ui.QMessageBox as message
 import MayaTools.core.ui.color_widget as color
 import MayaTools.tools.rig.control_manager.controls as controls
 import MayaTools.core.curve as curve
+import MayaTools.core.ui.separator as separator
 
-reload(controls)
-reload(message)
-reload(curve)
-reload(data)
-reload(color)
+import importlib
+
+importlib.reload(color)
+importlib.reload(controls)
 
 """
 #import MayaTools.tools.control_manager.controls_ui as ui
@@ -34,7 +35,7 @@ class ControlsController(object):
         return names
 
     @staticmethod
-    def create_control(items, name, scale, size, world, suffix, color):
+    def create_control(items, name, scale, size, world, suffix, color, vector, aim):
         cmds.undoInfo(openChunk=True)
 
         selection = cmds.ls(sl=True)
@@ -42,13 +43,15 @@ class ControlsController(object):
             for sel in selection:
                 for i in items:
                     control_curve = controls.ControlCurve(control=i.text(), align=sel, align_name=name, scale=scale,
-                                                          size=size, world=world, suffix=suffix, color=color)
+                                                          size=size, world=world, suffix=suffix, color=color,
+                                                          vector=vector, aim=aim)
                     control_curve.create()
 
         else:
             for i in items:
                 control_curve = controls.ControlCurve(control=i.text(), scale=scale, size=size,
-                                                      world=world, suffix=suffix, color=color)
+                                                      world=world, suffix=suffix, color=color,
+                                                      vector=vector, aim=aim)
                 control_curve.create()
 
         cmds.undoInfo(closeChunk=True)
@@ -89,6 +92,11 @@ class ControlsUI(QtWidgets.QDialog):
 
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
+        icon = QtGui.QIcon()
+        pixmap = QtGui.QPixmap(':/modifyScaleCurvature.png')
+        icon.addPixmap(pixmap)
+        self.setWindowIcon(icon)
+
         self.create_widgets()
         self.create_layout()
         self.add_to_layout()
@@ -98,7 +106,7 @@ class ControlsUI(QtWidgets.QDialog):
         self.prev_item_name = None
 
         self.controller = ControlsController()
-        self.update_list()
+
 
     def create_widgets(self):
         self.control_list_wdg = QtWidgets.QListWidget()
@@ -121,6 +129,23 @@ class ControlsUI(QtWidgets.QDialog):
         self.color_btn = color.ColorWidget()
         self.size_spin = QtWidgets.QDoubleSpinBox()
         self.size_spin.setValue(1)
+        self.aim_radio_btn = QtWidgets.QButtonGroup()
+        self.aim_x_radio_btn = QtWidgets.QRadioButton('X')
+        self.aim_y_radio_btn = QtWidgets.QRadioButton('Y')
+        self.aim_y_radio_btn.setChecked(True)
+        self.aim_z_radio_btn = QtWidgets.QRadioButton('Z')
+        self.aim_radio_btn.addButton(self.aim_x_radio_btn, id=0)
+        self.aim_radio_btn.addButton(self.aim_y_radio_btn, id=1)
+        self.aim_radio_btn.addButton(self.aim_z_radio_btn, id=2)
+        self.vector_axis_wdg = QtWidgets.QComboBox()
+        self.vector_axis_wdg.addItem('+')
+        self.vector_axis_wdg.addItem('-')
+        self.aim_label = QtWidgets.QLabel('Aim Axis')
+
+        self.separate_line_1 = separator.QHLine()
+        self.separate_line_2 = separator.QHLine()
+
+
 
     def create_layout(self):
         self.main_ly = QtWidgets.QVBoxLayout(self)
@@ -143,6 +168,12 @@ class ControlsUI(QtWidgets.QDialog):
         self.size_ly = QtWidgets.QFormLayout()
         self.size_ly.setLabelAlignment(QtCore.Qt.AlignLeft)
         self.size_ly.addRow('Size', self.size_spin)
+        self.aim_radio_ly = QtWidgets.QHBoxLayout()
+        self.aim_radio_ly.addWidget(self.aim_label)
+        self.aim_radio_ly.addWidget(self.aim_x_radio_btn)
+        self.aim_radio_ly.addWidget(self.aim_y_radio_btn)
+        self.aim_radio_ly.addWidget(self.aim_z_radio_btn)
+        self.aim_radio_ly.addWidget(self.vector_axis_wdg)
 
     def add_to_layout(self):
         self.main_ly.addLayout(self.sorted_form_ly)
@@ -155,9 +186,12 @@ class ControlsUI(QtWidgets.QDialog):
         self.options_checkBox_ly.addWidget(self.world_matrix_cb)
         self.options_ly.addLayout(self.options_checkBox_ly)
         self.prefix_scale_ly.addLayout(self.suffix_ly)
-        self.prefix_scale_ly.addLayout(self.color_ly)
         self.prefix_scale_ly.addLayout(self.size_ly)
+        self.prefix_scale_ly.addLayout(self.color_ly)
+        self.options_ly.addWidget(self.separate_line_1)
         self.options_ly.addLayout(self.prefix_scale_ly)
+        self.options_ly.addWidget(self.separate_line_2)
+        self.options_ly.addLayout(self.aim_radio_ly)
         self.options_group_box.setLayout(self.options_ly)
         self.main_ly.addWidget(self.options_group_box)
         self.main_ly.addWidget(self.create_btn)
@@ -173,7 +207,7 @@ class ControlsUI(QtWidgets.QDialog):
 
     def get_all_items_name(self):
         items = []
-        for item in xrange(self.control_list_wdg.count()):
+        for item in range(self.control_list_wdg.count()):
             items.append(self.control_list_wdg.item(item).text())
         return items
 
@@ -253,8 +287,12 @@ class ControlsUI(QtWidgets.QDialog):
         if color:
             color = color.getRgbF()[:-1]
 
+        vector = self.vector_axis_wdg.currentText()
+        aim = ['X', 'Y', 'Z'][self.aim_radio_btn.checkedId()]
+
         self.controller.create_control(selected_item, scale=scale, size=self.size_spin.value(),
-                                       world=world, suffix=self.suffix_le.text(), name=name, color=color)
+                                       world=world, suffix=self.suffix_le.text(), name=name,
+                                       color=color, vector=vector, aim=aim)
 
     def delete_control(self):
         selected_item = self.control_list_wdg.selectedItems()
@@ -287,6 +325,11 @@ class ControlsUI(QtWidgets.QDialog):
         else:
             cls.WINDOW_INSTANCE.raise_()
             cls.WINDOW_INSTANCE.activateWindow()
+
+    def showEvent(self, event):
+        super(ControlsUI, self).showEvent(event)
+        self.update_list()
+
 
     def showUI_dev(self):
         try:
