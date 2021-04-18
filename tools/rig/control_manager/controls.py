@@ -6,7 +6,6 @@ import enum
 
 _ = namedtuple('VectorAxis', ['vector', 'axis', 'angle'])
 
-
 class ShapeAngle(enum.Enum):
     pos_x = _('+', 'X', [0, 0, -90])
     pos_y = _('+', 'Y', [0, 0, 0])
@@ -14,7 +13,6 @@ class ShapeAngle(enum.Enum):
     neg_x = _('-', 'X', [0, 0, 90])
     neg_y = _('-', 'Y', [0, 0, 180])
     neg_z = _('-', 'Z', [-90, 0, 0])
-
 
 class ControlCurve(object):
     def __init__(self, control, name=None, size=None,
@@ -128,7 +126,6 @@ class ControlCurve(object):
         for obj in ShapeAngle:
             if vector in obj.value.vector:
                 if axis in obj.value.axis:
-                    print(obj)
                     self.set_rotate_shape(angle=obj.value.angle)
 
     def align_object(self, align):

@@ -18,8 +18,8 @@ def convert_pymel_to_qt(maya_widget):
     match = re.search(r"'(\w+)", str(ptr))
     type_obj = match.group(1)
 
-    return shiboken2.wrapInstance(long(ptr), getattr(QtWidgets, type_obj))
+    return shiboken2.wrapInstance(int(ptr), getattr(QtWidgets, type_obj))
 
 
 def convert_qt_to_pymel(widget):
-    return omui.MQtUtil.fullName(long(shiboken2.getCppPointer(widget)[0]))
+    return omui.MQtUtil.fullName(int(shiboken2.getCppPointer(widget)[0]))
