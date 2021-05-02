@@ -4,10 +4,21 @@ from PySide2 import QtWidgets
 from PySide2 import QtCore
 from PySide2 import QtGui
 import MayaTools.core.ui.utils_qt as utils_qt
-from functools import partial
+import maya.OpenMayaUI as omui
+import shiboken2 as shiboken
+
 import importlib
 
 importlib.reload(utils_qt)
+
+"""
+import importlib
+import MayaTools.tools.pipeline.menu_creator.menu_ui as ui
+importlib.reload(ui)
+
+menu = ui.MenuEditor()
+menu.showUI()
+"""
 
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
@@ -16,8 +27,12 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         type='item',
         divider=False,
         option_box=False,
-        language='Mel',
-        text=''
+        language_command='Mel',
+        language_option_box='Mel',
+        text_command_python='',
+        text_option_box_python='',
+        text_command_mel='',
+        text_option_box_mel=''
     )
 
     SUBMENU_FLAGS = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
@@ -48,6 +63,19 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         config = self.data(0, QtCore.Qt.UserRole)
         config['label'] = label
         self.setText(0, label)
+        self.setData(0, QtCore.Qt.UserRole, config)
+
+    def set_text(self, text, option_box=False):
+        config = self.data(0, QtCore.Qt.UserRole)
+
+        if option_box:
+            if config['language_command'] == 'Mel':
+                config['text_option_box_mel'] = text
+            else:
+                config['text_option_box_mel'] = text
+        else:
+            config['text_command'] = text
+
         self.setData(0, QtCore.Qt.UserRole, config)
 
     def set_type(self, type='item'):
@@ -126,143 +154,51 @@ class TreeWidgetItemDelegate(QtWidgets.QStyledItemDelegate):
             return QtCore.QSize(0, self.item.ITEM_SIZE)
         return QtWidgets.QStyledItemDelegate.sizeHint(self, option, index)
 
+
+class CustomTabBar(QtWidgets.QTabBar):
+    def tabSizeHint(self, index):
+        s = QtWidgets.QTabBar.tabSizeHint(self, index)
+        s.transpose()
+        return s
+
+
 class CustomTabWidget(QtWidgets.QTabWidget):
     def __init__(self, parent):
         super(CustomTabWidget, self).__init__(parent)
 
-        #self.setDocumentMode(True)
-        self.setStyleSheet(""" 
-
-QTabWidget::pane {
-    border: 1px solid black;
-    
-}
-
-QTabWidget::tab-bar:top {
-    top: 1px;
-}
-
-QTabWidget::tab-bar:bottom {
-    bottom: 1px;
-}
-
-QTabWidget::tab-bar:left {
-    right: 1px;
-}
-
-QTabWidget::tab-bar:right {
-    left: 1px;
-}
-
-QTabBar::tab {
-    border: 2px solid black;
-}
+        self.setStyleSheet("""
+        QTabWidget::tab-bar {
+             color: #45a15d;
+             min-width: 999999px;
+             top: 0.1em;
+             
+             }
+        QTabBar:tab:!selected {
+            padding: 5px;
+        }
+        QTabBaq:tab:selected { 
+            padding: 5px;
+        }
+        """)
 
 
+def get_maya_main_window():
+    """
 
+    Get the main Maya window as a QtGui.QMainWindow instance
 
-QTabBar::tab:top:!selected {
-    margin-top: 3px;
-}
+    :return: QtGui.QMainWindow instance of the top level Maya windows
 
-QTabBar::tab:bottom:!selected {
-    margin-bottom: 3px;
-}
-
-QTabBar::tab:top, QTabBar::tab:bottom {
-    min-width: 8ex;
-    margin-right: -1px;
-    padding: 5px 10px 5px 10px;
-}
-
-QTabBar::tab:top:selected {
-    border-bottom-color: none;
-}
-
-QTabBar::tab:bottom:selected {
-    border-top-color: none;
-}
-
-QTabBar::tab:top:last, QTabBar::tab:bottom:last,
-QTabBar::tab:top:only-one, QTabBar::tab:bottom:only-one {
-    margin-right: 0;
-}
-
-QTabBar::tab:left:!selected {
-    margin-right: 3px;
-}
-
-QTabBar::tab:right:!selected {
-    margin-left: 3px;
-}
-
-QTabBar::tab:left, QTabBar::tab:right {
-    min-height: 8ex;
-    margin-bottom: -1px;
-    padding: 10px 5px 10px 5px;
-}
-
-QTabBar::tab:left:selected {
-    border-left-color: none;
-}
-
-QTabBar::tab:right:selected {
-    border-right-color: none;
-}
-
-QTabBar::tab:left:last, QTabBar::tab:right:last,
-QTabBar::tab:left:only-one, QTabBar::tab:right:only-one {
-    margin-bottom: 0;
-}""")
+    """
+    ptr = omui.MQtUtil.mainWindow()
+    if ptr is not None:
+        return shiboken.wrapInstance(int(ptr), QtWidgets.QWidget)
 
 
 class MenuEditor(QtWidgets.QDialog):
-    MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
-
+    # MAYA = pm.ui.PyUI('MayaWindow').asQtObject()
+    MAYA = get_maya_main_window()
     PATH = r'E:\Work\Pipeline\MayaTools\tools\menu_creator\menu'
-    ITEM_DATA = dict(
-        label='Item',
-        type='item',
-        language='Mel',
-        text='',
-        divider=False
-    )
-
-    CONFIG = dict(
-        submenu=dict(
-            label='Submenu',
-            size=14,
-            color=QtGui.QColor(255, 0, 0),
-            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
-                  QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
-        ),
-        item=dict(
-            label='Item',
-            size=14,
-            color=QtGui.QColor(0, 255, 0),
-            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
-                  QtCore.Qt.ItemIsDragEnabled,
-        ),
-        divider=dict(
-            label='―',
-            size=12,
-            color=QtGui.QColor(200, 200, 200),
-            flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable |
-                  QtCore.Qt.ItemIsDragEnabled
-        )
-
-    )
-
-    @staticmethod
-    def get_script_editor(python=False):
-        pm.window()
-        pm.columnLayout()
-        executer = pm.cmdScrollFieldExecuter()
-        if python:
-            executer = pm.cmdScrollFieldExecuter(sourceType="python")
-
-        qt_obj = utils_qt.convert_pymel_to_qt(executer)
-        return executer, qt_obj
 
     @staticmethod
     def showUI():
@@ -434,8 +370,29 @@ class MenuEditor(QtWidgets.QDialog):
         self.divider_cb.stateChanged.connect(self.set_divider)
         self.option_box_cb.stateChanged.connect(self.set_option_box)
         self.label_editor.textChanged.connect(self.label_change)
+        self.command_editor.changeText.connect(self.command_change)
+        self.option_box_editor.changeText.connect(lambda x=None: self.command_change(self.option_box_editor.python))
 
     """  BUTTON CONNECTIONS """
+
+    def command_change(self, python=True):
+        item = self.get_selected_item()
+        if not item:
+            return
+
+        option_box = self.option_box_cb.isChecked()
+        select_tab = self.scripts_group_box.currentIndex()
+
+        # check if active option box
+        option_state = False
+        if option_box and select_tab:
+            option_state = True
+
+        text = self.command_editor.get_text(python=python)
+        print(text)
+
+
+        item.set_text(text, option_box=option_state)
 
     def add_item(self):
         item = CustomTreeItem(self.menu_tree)
@@ -478,6 +435,16 @@ class MenuEditor(QtWidgets.QDialog):
         # enable all widgets
         self.enabled_widgets(True)
 
+        # set text in editor
+        language_command = True if config['language_command'] == 'python' else False
+        text_command = config['text_command']
+
+        self.command_editor.set_text(text=text_command, python=language_command)
+        if self.option_box_cb.isChecked():
+            language_option_box = True if config['language_option_box'] == 'python' else False
+            text_option_box = config['text_option_box']
+            self.option_box_editor.set_text(text=text_option_box, python=language_option_box)
+
         # enable divider checkBox
         self.divider_cb.setEnabled(True)
         if item.childCount():
@@ -501,13 +468,6 @@ class MenuEditor(QtWidgets.QDialog):
 
         self.label_editor.setText(item.text(0))
 
-    def execute(self):
-        lang = self.get_current_languages()
-        if lang == 'Mel':
-            self.exec_mel.executeAll()
-        elif lang == 'Python':
-            self.exec_python.executeAll()
-
     def delete_item(self):
         selected = self.menu_tree.selectedItems()
         if not selected:
@@ -519,6 +479,8 @@ class MenuEditor(QtWidgets.QDialog):
 
     def save(self):
         print('SAVE')
+        print(self.command_editor.get_text(python=True))
+        print(self.command_editor.get_text())
 
     def set_divider(self):
         """ Apply divider property for selected item"""
@@ -558,18 +520,6 @@ class MenuEditor(QtWidgets.QDialog):
 
     """  FUNCTIONAL  """
 
-    def change_language(self):
-        lang = self.get_current_languages()
-        if lang == 'Mel':
-            self.python_widget.hide()
-            self.mel_widget.show()
-            self.exec_mel.getSourceType()
-
-        elif lang == 'Python':
-            self.mel_widget.hide()
-            self.python_widget.show()
-            self.exec_python.getSourceType()
-
     def get_selected_item(self):
         selected = self.menu_tree.selectedItems()
         if not len(selected) == 1:
@@ -584,15 +534,18 @@ class MenuEditor(QtWidgets.QDialog):
 
 
 class ScriptEditor(QtWidgets.QWidget):
-    @staticmethod
-    def get_script_editor(python=False):
+    changeText = QtCore.Signal()
+
+    def get_script_editor(self, python=False):
         pm.window()
         pm.columnLayout()
-        executer = pm.cmdScrollFieldExecuter()
+        executer = pm.cmdScrollFieldExecuter(fkp=self.emit_signal)
         if python:
-            executer = pm.cmdScrollFieldExecuter(sourceType="python", commandCompletion=False, showTooltipHelp=False)
+            executer = pm.cmdScrollFieldExecuter(sourceType="python", commandCompletion=False, showTooltipHelp=False,
+                                                 fkp=self.emit_signal)
 
-        qt_obj = utils_qt.convert_pymel_to_qt(executer)
+        qt_obj = utils_qt.convert_pymel_to_qt(executer, type_obj='QTextEdit')
+
         return executer, qt_obj
 
     def __init__(self, parent=None, python=True):
@@ -608,6 +561,9 @@ class ScriptEditor(QtWidgets.QWidget):
         else:
             self.mel_radio.setChecked(True)
             self.python_widget.hide()
+
+    def emit_signal(self, *args):
+        self.changeText.emit()
 
     def build(self):
         self.python_radio = QtWidgets.QRadioButton('Python')
@@ -632,11 +588,13 @@ class ScriptEditor(QtWidgets.QWidget):
         self.edit_mel_ly.setContentsMargins(0, 0, 0, 0)
         self.edit_mel_ly.addWidget(self.edit_mel)
         self.mel_widget.setLayout(self.edit_mel_ly)
+        self.edit_mel = self.mel_widget.children()[1]
 
         self.edit_python_ly = QtWidgets.QHBoxLayout()
         self.edit_python_ly.setContentsMargins(0, 0, 0, 0)
         self.edit_python_ly.addWidget(self.edit_python)
         self.python_widget.setLayout(self.edit_python_ly)
+        self.edit_python = self.python_widget.children()[1]
 
         self.execute_btn = QtWidgets.QPushButton('Execute')
         icon = QtGui.QIcon()
@@ -653,20 +611,22 @@ class ScriptEditor(QtWidgets.QWidget):
         self.setLayout(self.main_ly)
 
     def make_connections(self):
+        t = QtWidgets.QWidget()
+
         self.languages_btn.buttonClicked.connect(self.change_language)
         self.execute_btn.clicked.connect(self.execute)
+        self.edit_python.textChanged.connect(self.emit_signal)
 
     def change_language(self):
         lang = self.get_current_languages()
         if lang == 'Mel':
+            self.python = False
             self.python_widget.hide()
             self.mel_widget.show()
-            print(self.exec_mel.getSourceType())
-
         elif lang == 'Python':
+            self.python = True
             self.mel_widget.hide()
             self.python_widget.show()
-            print(self.exec_python.getSourceType())
 
     def get_current_languages(self):
         if self.mel_radio.isChecked():
@@ -675,16 +635,22 @@ class ScriptEditor(QtWidgets.QWidget):
             return 'Python'
 
     def execute(self):
-        print('Execute')
+        lang = self.get_current_languages()
+        if lang == 'Mel':
+            self.exec_mel.executeAll()
+        elif lang == 'Python':
+            self.exec_python.executeAll()
 
-    def set_text(self, python=False):
-        pass
+    def set_text(self, text, python=False):
+        if python:
+
+            return self.exec_python.setText(text)
+        else:
+            return self.exec_mel.setText(text)
 
     def get_text(self, python=False):
-        pass
+        if python:
+            return self.edit_python.toPlainText()
+        else:
+            return self.edit_mel.toPlainText()
 
-    def set_state(self, python=False):
-        pass
-
-    def get_state(self, python=False):
-        pass
