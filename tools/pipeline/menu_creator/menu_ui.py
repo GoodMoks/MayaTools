@@ -65,16 +65,19 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         self.setText(0, label)
         self.setData(0, QtCore.Qt.UserRole, config)
 
-    def set_text(self, text, option_box=False):
+    def set_text(self, text):
         config = self.data(0, QtCore.Qt.UserRole)
 
-        if option_box:
-            if config['language_command'] == 'Mel':
-                config['text_option_box_mel'] = text
+        if config['option_box']:
+            if config['language_option_box'] == 'Python':
+                config['text_option_box_python'] = text
             else:
                 config['text_option_box_mel'] = text
         else:
-            config['text_command'] = text
+            if config['language_command'] == 'Python':
+                config['text_command_python'] = text
+            else:
+                config['text_command_mel'] = text
 
         self.setData(0, QtCore.Qt.UserRole, config)
 
@@ -370,7 +373,7 @@ class MenuEditor(QtWidgets.QDialog):
         self.divider_cb.stateChanged.connect(self.set_divider)
         self.option_box_cb.stateChanged.connect(self.set_option_box)
         self.label_editor.textChanged.connect(self.label_change)
-        self.command_editor.changeText.connect(self.command_change)
+        self.command_editor.changeText.connect(lambda x=None: self.command_change(self.command_editor.python))
         self.option_box_editor.changeText.connect(lambda x=None: self.command_change(self.option_box_editor.python))
 
     """  BUTTON CONNECTIONS """
@@ -388,11 +391,12 @@ class MenuEditor(QtWidgets.QDialog):
         if option_box and select_tab:
             option_state = True
 
-        text = self.command_editor.get_text(python=python)
-        print(text)
+        if not option_state:
+            text = self.command_editor.get_text(python=python)
+        if option_state:
+            text = self.option_box_editor.get_text(python=python)
 
-
-        item.set_text(text, option_box=option_state)
+        item.set_text(text)
 
     def add_item(self):
         item = CustomTreeItem(self.menu_tree)
@@ -437,7 +441,7 @@ class MenuEditor(QtWidgets.QDialog):
 
         # set text in editor
         language_command = True if config['language_command'] == 'python' else False
-        text_command = config['text_command']
+        text_command = config['text_command_python']
 
         self.command_editor.set_text(text=text_command, python=language_command)
         if self.option_box_cb.isChecked():
@@ -539,7 +543,7 @@ class ScriptEditor(QtWidgets.QWidget):
     def get_script_editor(self, python=False):
         pm.window()
         pm.columnLayout()
-        executer = pm.cmdScrollFieldExecuter(fkp=self.emit_signal)
+        executer = pm.cmdScrollFieldExecuter(fkp=self.emit_signal, commandCompletion=False, showTooltipHelp=False)
         if python:
             executer = pm.cmdScrollFieldExecuter(sourceType="python", commandCompletion=False, showTooltipHelp=False,
                                                  fkp=self.emit_signal)
