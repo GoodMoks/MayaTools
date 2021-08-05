@@ -4,6 +4,7 @@ import shiboken2
 import re
 
 
+
 def convert_pymel_to_qt(maya_widget, type_obj=None):
     ptr = omui.MQtUtil.findControl(maya_widget)
     if not ptr:

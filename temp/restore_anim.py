@@ -4,7 +4,7 @@ import maya.cmds as cmds
 
 def get_all_animCurve():
     all_curve = cmds.ls(et='animCurve')
-    print all_curve
+    print(all_curve)
 
 
 def build():
@@ -24,7 +24,7 @@ def build():
                     break
 
                 if connect and cmds.objectType(connect[0]) == 'pairBlend':
-                    print connect
+                    print(connect)
 
 
 def start():

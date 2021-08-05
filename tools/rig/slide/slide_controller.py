@@ -61,7 +61,7 @@ class SlideSurface(object): #WIP
 class MakeSlide(object): # WIP
     def __init__(self, curve):
         self.curve = curve
-
+        self.items = []
         self.build()
 
     def create_slide_curve(self):
@@ -69,9 +69,10 @@ class MakeSlide(object): # WIP
         self.slide.create()
 
     def create_item(self):
-        value = utils.get_value_range(4, 1)
+        value = utils.get_value_range(37, 1)
         for number, v in enumerate(value):
             item = slide.SlideItem(curve=self.curve, parameter=v, prefix=str(number))
+            self.items.append(item)
             self.slide.set_item(item)
 
     def create_driven_curve(self):
@@ -84,6 +85,7 @@ class MakeSlide(object): # WIP
         self.create_slide_curve()
         #self.create_driven_curve()
         self.create_item()
+
         #self.slide.set_global_scale_ctrl('curve1_CTRL', 'scaleX')
 
 

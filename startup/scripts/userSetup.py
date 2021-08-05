@@ -24,6 +24,4 @@ def add_menu():
     import MayaTools.startup.Menu.menu as menu
     menu.create_menu()
 
-
 maya.utils.executeDeferred(initialize)
-
