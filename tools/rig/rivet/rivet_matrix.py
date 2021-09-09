@@ -28,6 +28,24 @@ def build():
     pm.group(nodes)
     pm.undoInfo(closeChunk=True)
 
+def build_single():
+    s = pm.selected()
+    if not s:
+        return
+
+    surf = s[1]
+    obj = s[0]
+    nodes = []
+    pm.undoInfo(openChunk=True)
+
+    r = rivet.RivetMatrix(str(obj), str(surf), True)
+    dec_node = r.dec_node
+    output_node = pm.createNode('transform', n='{}_rivetOut'.format(obj))
+    pm.connectAttr('{}.outputTranslate'.format(dec_node), '{}.translate'.format(output_node))
+    pm.connectAttr('{}.outputRotate'.format(dec_node), '{}.rotate'.format(output_node))
+    pm.parentConstraint(output_node, obj, mo=True)
+
+    pm.undoInfo(closeChunk=True)
 
 def fix_axis():
     s = pm.selected()
