@@ -5,10 +5,11 @@ import MayaTools.core.name as name
 
 reload(name)
 
-
 """
 Draft work version of my script
 """
+
+
 # todo Create UI
 # todo Add the option not to delete non-reference objects
 
@@ -70,15 +71,13 @@ class IsolateSkeleton(object):
         cmds.undoInfo(closeChunk=True)
 
     def duplicate_special(self):
-
-
         absolute_name = name.strip_namespace(self.main_top)
         world_name = self.is_exist_world_name(absolute_name)
         if world_name:
             if not self.confirm_dialog(absolute_name):
                 return False
 
-        self.duplicate_objects = cmds.duplicate(self.main_top, ilf=True, ic=True, po=False, rr=False)
+        self.duplicate_objects = cmds.duplicate(self.main_top, ilf=False, ic=True, po=False, rr=False)
         self.isolate_top = self.duplicate_objects[0]
         cmds.connectAttr('{}.parentMatrix'.format(self.main_top), '{}.offsetParentMatrix'.format(self.isolate_top))
 
