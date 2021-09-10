@@ -1,8 +1,26 @@
 import maya.cmds as cmds
 import pymel.core as pm
+import maya.api.OpenMaya as om2
 import MayaTools.core.name as name
 
 reload(name)
+
+
+"""
+Draft work version of my script
+"""
+# todo Create UI
+# todo Add the option not to delete non-reference objects
+
+
+def make_isolate():
+    sel = cmds.ls(sl=True)
+    if not sel:
+        om2.MGlobal.displayError('Please select top object of hierarchy')
+    if len(sel) > 1:
+        om2.MGlobal.displayError('Please select only one object')
+
+    IsolateSkeleton(sel[0])
 
 
 class IsolateSkeleton(object):
@@ -52,8 +70,7 @@ class IsolateSkeleton(object):
         cmds.undoInfo(closeChunk=True)
 
     def duplicate_special(self):
-        # todo Create UI
-        # todo Add the option not to delete non-reference objects
+
 
         absolute_name = name.strip_namespace(self.main_top)
         world_name = self.is_exist_world_name(absolute_name)
