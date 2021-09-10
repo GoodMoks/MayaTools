@@ -1,55 +1,40 @@
 import maya.cmds as cmds
 import pymel.core as pm
+import MayaTools.core.name as name
 
-
-class NameParser(object):
-    @staticmethod
-    def get_namespaces(name):
-        all_namespace = cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
-        print(all_namespace)
-        in_name = [x for x in all_namespace if x in name]
-        return in_name
-
-    def __init__(self, name):
-        self.name = name
-
-        self.strip_namespace()
-
-    def is_namespaces(self, name):
-        if self.get_namespaces(name):
-            return True
-        return False
-
-    def strip_namespace(self, level=0):
-        maxsplit = level
-        if level == 0:
-            maxsplit = -1
-
-        all_namespace = self.get_namespaces(self.name)
-        print(all_namespace)
-        split_name = self.name.split(':', maxsplit)
-        print(split_name)
-        dif_list = [x for x in split_name if x not in all_namespace]
-        print(dif_list)
+reload(name)
 
 
 class IsolateSkeleton(object):
-    def __init__(self, obj_top):
-        self.obj_top = obj_top
-        self.duplicate_objects = None
-        self.isolate_parent = None
+    @staticmethod
+    def compare_hierarchy_ref(origin, isolate):
+        child_origin = pm.listRelatives(origin, ad=True)
+        child_isolate = pm.listRelatives(isolate, ad=True)
+        not_reference = []
+        if not len(child_origin) == len(child_isolate):
+            return None
 
-        self.ref_hierarchy(self.obj_top)
-        # self.duplicate_special()
+        for index in range(len(child_origin)):
+            state = pm.referenceQuery(child_origin[index], inr=True)
+            if not state:
+                not_reference.append(child_isolate[index])
 
-    def strip_namespace(self, obj):
-        node = pm.PyNode(obj)
-        name = node.stripNamespace()
-        return name
+        return not_reference
 
-    def is_exist_world_name(self, obj):
+    @staticmethod
+    def confirm_dialog(name_joint):
+        response = cmds.confirmDialog(
+            title='Duplicate?',
+            message='There is an object with the same name as the skeleton - "{}"?'.format(name_joint),
+            button=['Okey', 'Ne Okey'],
+        )
+        if response == 'Ne Okey':
+            return False
+        return True
+
+    @staticmethod
+    def is_exist_world_name(obj):
         root_name = cmds.ls(obj)
-        print(root_name)
 
         if len(root_name):
             world_objects = [x for x in root_name if not cmds.listRelatives(x, ap=True)]
@@ -57,23 +42,34 @@ class IsolateSkeleton(object):
                 return True
         return False
 
-    def ref_hierarchy(self, top):
-        pass
+    def __init__(self, obj):
+        self.main_top = obj
+        self.duplicate_objects = None
+        self.isolate_top = None
+
+        cmds.undoInfo(openChunk=True)
+        self.duplicate_special()
+        cmds.undoInfo(closeChunk=True)
 
     def duplicate_special(self):
-        absolute_name = self.strip_namespace(self.obj_top)
+        # todo Create UI
+        # todo Add the option not to delete non-reference objects
+
+        absolute_name = name.strip_namespace(self.main_top)
         world_name = self.is_exist_world_name(absolute_name)
         if world_name:
-            response = cmds.confirmDialog(
-                title='Duplicate?',
-                message='There is an object with the same name as the skeleton - "{}"?'.format(absolute_name),
-                button=['Okey', 'Ne Okey'],
-            )
-            if response == 'Ne Okey':
+            if not self.confirm_dialog(absolute_name):
                 return False
 
-        self.duplicate_objects = pm.duplicate(self.obj_top, ilf=True, ic=True, po=False, rr=True)
-        self.isolate_parent = self.duplicate_objects[0]
+        self.duplicate_objects = cmds.duplicate(self.main_top, ilf=True, ic=True, po=False, rr=False)
+        self.isolate_top = self.duplicate_objects[0]
+        cmds.connectAttr('{}.parentMatrix'.format(self.main_top), '{}.offsetParentMatrix'.format(self.isolate_top))
 
-        cmds.connectAttr('{}.parentMatrix'.format(self.obj_top), '{}.offsetParentMatrix'.format(self.isolate_parent))
-        cmds.parent(self.isolate_parent, w=True)
+        if cmds.listRelatives(self.isolate_top, p=True):
+            cmds.parent(self.isolate_top, w=True)
+
+        delete_list = self.compare_hierarchy_ref(self.main_top, self.duplicate_objects[0])
+        if not delete_list:
+            return
+
+        pm.delete(delete_list)
