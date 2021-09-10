@@ -61,6 +61,13 @@ class IsolateSkeleton(object):
                 return True
         return False
 
+    @staticmethod
+    def clean_skeleton(top):
+        child = pm.listRelatives(top, ad=True)
+        for c in child:
+            if not pm.nodeType(c) == 'joint':
+                pm.delete(c)
+
     def __init__(self, obj):
         self.main_top = obj
         self.duplicate_objects = None
@@ -84,8 +91,10 @@ class IsolateSkeleton(object):
         if cmds.listRelatives(self.isolate_top, p=True):
             cmds.parent(self.isolate_top, w=True)
 
-        delete_list = self.compare_hierarchy_ref(self.main_top, self.duplicate_objects[0])
-        if not delete_list:
-            return
+        self.clean_skeleton(self.isolate_top)
 
-        pm.delete(delete_list)
+        # delete_list = self.compare_hierarchy_ref(self.main_top, self.duplicate_objects[0])
+        # if not delete_list:
+        #     return
+        #
+        # pm.delete(delete_list)
