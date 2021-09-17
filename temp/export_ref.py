@@ -1,9 +1,6 @@
 import maya.cmds as cmds
 import pymel.core as pm
 import maya.api.OpenMaya as om2
-import MayaTools.core.name as name
-
-reload(name)
 
 """
 Draft work version of my script
@@ -22,6 +19,12 @@ def make_isolate():
         om2.MGlobal.displayError('Please select only one object')
 
     IsolateSkeleton(sel[0])
+
+
+def strip_namespace(obj):
+    node = pm.PyNode(obj)
+    name = node.stripNamespace()
+    return str(name)
 
 
 class IsolateSkeleton(object):
@@ -78,7 +81,7 @@ class IsolateSkeleton(object):
         cmds.undoInfo(closeChunk=True)
 
     def duplicate_special(self):
-        absolute_name = name.strip_namespace(self.main_top)
+        absolute_name = strip_namespace(self.main_top)
         world_name = self.is_exist_world_name(absolute_name)
         if world_name:
             if not self.confirm_dialog(absolute_name):
