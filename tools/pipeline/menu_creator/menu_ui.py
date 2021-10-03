@@ -119,7 +119,7 @@ class TreeWidgetItemDelegate(QtWidgets.QStyledItemDelegate):
         options = QtWidgets.QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
 
-        tree_widget = index.model().obj_top()
+        tree_widget = index.model().parent()
         main_rect = tree_widget.rect()
         self.item = tree_widget.itemFromIndex(index)
         level = self.check_parent_levels(index)
@@ -139,7 +139,7 @@ class TreeWidgetItemDelegate(QtWidgets.QStyledItemDelegate):
             painter.drawRect((length + indent) + 5, self.item.ITEM_SIZE / 3 + rect.y(), 10, 10)
 
     def check_parent_levels(self, model_index, level=0):
-        parent = model_index.obj_top()
+        parent = model_index.parent()
         if parent.data(0):
             new_level = level + 1
             return self.check_parent_levels(parent, level=new_level)
@@ -478,7 +478,7 @@ class MenuEditor(QtWidgets.QDialog):
             return
 
         for item in selected:
-            parent = item.obj_top() or self.menu_tree.invisibleRootItem()
+            parent = item.parent() or self.menu_tree.invisibleRootItem()
             parent.takeChild(self.menu_tree.indexFromItem(item).row())
 
     def save(self):
