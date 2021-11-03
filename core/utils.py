@@ -54,14 +54,12 @@ def time_info(func):
 
 
 def chunk_decorator(func):
-    cmds.undoInfo(openChunk=True)
+    def function(*args, **kwargs):
+        cmds.undoInfo(openChunk=True)
+        func(*args, **kwargs)
+        cmds.undoInfo(closeChunk=True)
 
-    def function(*func_args, **func_kwargs):
-        return func(*func_args, **func_kwargs)
-
-    cmds.undoInfo(closeChunk=True)
     return function
-
 
 def create_follicle(name):
     """ create follicle

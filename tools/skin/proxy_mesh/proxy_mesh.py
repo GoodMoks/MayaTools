@@ -15,9 +15,6 @@ proxy.Proxy().get_selected_face()
 '''
 
 
-
-
-
 class ProxyController(object):
 
     @staticmethod
@@ -102,5 +99,3 @@ class ProxyController(object):
         self.restore_skin(new_mesh.source_mesh, new_mesh.proxy_mesh)
 
         cmds.select(new_mesh.proxy_mesh)
-
-

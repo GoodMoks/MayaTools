@@ -68,7 +68,7 @@ class AimChainController(object):
         if objects:
             new_objects = []
             temp_constraints = []
-            for index in xrange(len(objects)):
+            for index in range(len(objects)):
                 obj_name = '{}_{}_{}'.format(objects[index], 'proxy', index + 1)
                 if pm.objExists(obj_name):
                     continue
@@ -84,12 +84,12 @@ class AimChainController(object):
                 temp_constraints.append(pm.parentConstraint(objects[index], obj, mo=False))
 
             parent = dag.get_parent(str(objects[0]))
-            print parent
+            print(parent)
             pm.parent(new_objects[0], parent)
             self.bake_result(new_objects)
             pm.delete(temp_constraints)
 
-            for index in xrange(len(new_objects)):
+            for index in range(len(new_objects)):
                 try:
                     pm.parentConstraint(new_objects[index], objects[index], mo=True)
                 except:
