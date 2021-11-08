@@ -27,7 +27,7 @@ def get_dagPath(obj):
         return m_dagPath
 
 
-def get_history(node, type=None):
+def get_history(node, type=None):  # change attributes in listHistory, needed check affect
     """ get node for type in history connections
 
     :param node: 'str' object
@@ -35,7 +35,7 @@ def get_history(node, type=None):
     :return: 'list' with objects or []
     """
     try:
-        history = cmds.listHistory(node)
+        history = cmds.listHistory(node, pdo=True, lf=False)
     except:
         return None
 
@@ -105,6 +105,7 @@ def get_objects_with_attr(obj_type, attr):
         iterDag.next()
     return instances
 
+
 def is_pymel(obj):
     """ check is pymel object
 
@@ -132,6 +133,3 @@ def get_dag_path(obj):
     sel.add(str(obj))
     sel.getDagPath(0, dag_path)
     return dag_path
-
-
-

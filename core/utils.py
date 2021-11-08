@@ -1,3 +1,4 @@
+import functools
 import maya.cmds as cmds
 import maya.api.OpenMaya as om2
 import MayaTools.core.dag as dag
@@ -51,6 +52,18 @@ def time_info(func):
         return result
 
     return timeRun
+
+
+def undoable(func):
+    @functools.wraps(func)
+    def inner_func(*args, **kwargs):
+        try:
+            cmds.undoInfo(openChunk=True, chunkName=func.__name__)
+            return func(*args, **kwargs)
+        finally:
+            cmds.undoInfo(closeChunk=True, chunkName=func.__name__)
+
+    return inner_func
 
 
 def chunk_decorator(func):
