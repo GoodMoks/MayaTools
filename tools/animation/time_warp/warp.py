@@ -13,7 +13,7 @@ reload(utils)
 
 
 # todo 1. Find method bake only anim curve
-# todo 2. fix layers core (добавить возможность забирать кривые только для выделенного обьекта)
+
 
 def build():
     sel = cmds.ls(sl=True)
@@ -37,6 +37,7 @@ class TimeWrap(object):
         return objects
 
     def get_selected_layer(self):
+        """  """
         layer = layers.get_selected_anim_layers()
         if not layer:
             om2.MGlobal.displayError("Nothing selected layers")
@@ -44,13 +45,15 @@ class TimeWrap(object):
     def warp_object_in_scene(self):
         anim_curves = []
         obj = self.get_selected_object()
-        layers_obj = layers.get_affected_layer(obj)
-        print(layers_obj)
+        if not obj:
+            return
+
+        layers_obj = layers.get_affected_layer(obj=obj[0])
         if layers_obj:
             for layer in layers_obj:
-                layer_curves = layers.get_anim_curves_from_layer(layer)
-                anim_curves.append(layer_curves)
+                anim_curves.extend(layers.get_object_anim_curve_from_layer(layer=layer, obj=obj[0]))
 
+        wrap_curves = TimeWarpCurve(curves=anim_curves)
 
 
 class TimeWarpController(object):
