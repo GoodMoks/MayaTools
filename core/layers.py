@@ -13,6 +13,38 @@ def enabled_layer(obj, state):
             cmds.setAttr(layer + '.enabled', state)
 
 
+def get_affected_layer(obj, skip_base_layer=False):
+    """ get related animation later for given object
+
+    :param obj: 'str' name of object
+    :param skip_base_layer: 'bool' return value with 'BaseAnimation' or not
+    :return: 'list' of animation layers
+    """
+    layers = cmds.animLayer([obj], afl=True, q=True)
+
+    if skip_base_layer and layers:
+        layers = [layer for layer in layers if not layer == 'BaseAnimation']
+
+    return layers
+
+
+def get_base_anim_layer_curves(obj):
+    """ return base animation curve for given object
+
+    :param obj: 'str' name of object
+    :return: 'list' with base animation curves
+    """
+    base_curves = []
+    obj_curves = get_anim_curves_from_layer(layer='BaseAnimation', obj=obj)
+    if obj_curves:
+        base_curves.extend(obj_curves)
+    curves_not_in_layer = cmds.listConnections(obj, t='animCurve')
+    if curves_not_in_layer:
+        base_curves.extend(curves_not_in_layer)
+
+    return base_curves
+
+
 def get_selected_anim_layers():
     """ return all selected anim later in scene
 
@@ -22,22 +54,17 @@ def get_selected_anim_layers():
     return selected
 
 
-def get_affected_layer(obj, skip_base_layer=False):
-    layers = cmds.animLayer([obj], afl=True, q=True)
+def get_objects_from_layer(layer, attributes=False):
+    """ get all object in animation layer
 
-    if skip_base_layer and layers:
-        layers = [layer for layer in layers if not layer == 'BaseAnimation']
-
-    return layers
-
-
-def get_all_anim_curves_from_layer(layer):
-    curves = cmds.animLayer(layer, anc=True, q=True)
-    return curves
-
-
-def get_objects_from_anim_layer(layer, attributes=False):
+    :param layer: 'str' animation layer
+    :param attributes: 'bool' return object with attributes 'obj.translateX' or not 'obj'
+    :return: 'list' with objects
+    """
     objects_with_attributes = cmds.animLayer(layer, q=True, at=True)
+    if not objects_with_attributes:
+        return
+
     if attributes:
         return objects_with_attributes
 
@@ -45,7 +72,23 @@ def get_objects_from_anim_layer(layer, attributes=False):
     return objects
 
 
-def get_object_anim_curve_from_layer(layer, obj):
+def get_all_anim_curves_from_layer(layer):
+    """ return all animation curves for all objects in layer
+
+    :param layer: 'str' animation layer
+    :return: 'list' with animation curves
+    """
+    curves = cmds.animLayer(layer, anc=True, q=True)
+    return curves
+
+
+def get_anim_curves_from_layer(layer, obj):
+    """ return anim curves only from layer
+
+    :param layer: 'str' animation layer
+    :param obj: 'str' animated object
+    :return: 'list' list with animations curve nodes
+    """
     all_attributes = ['.'.join([obj, a]) for a in cmds.listAttr(obj, k=True)]
     curves = []
     for attr in all_attributes:
