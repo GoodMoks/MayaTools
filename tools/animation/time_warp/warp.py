@@ -12,7 +12,6 @@ reload(base)
 reload(utils)
 
 
-
 class TimeWarp(object):
     wrap_curves = None
 
@@ -29,16 +28,22 @@ class TimeWarp(object):
             om2.MGlobal.displayError("Nothing selected layers")
         return layer
 
+    def warp_select(self):
+        sel = cmds.ls(sl=True)
+        self.warp_object_in_scene(obj=sel)
+
     def warp_object_in_scene(self, obj):
         anim_curves = []
-        layers_obj = layers.get_affected_layer(obj=obj)
-        if not layers_obj:
-            return
+        for o in obj:
+            layers_obj = layers.get_affected_layer(obj=o)
 
-        for layer in layers_obj:
-            anim_curves.extend(layers.get_anim_curves_from_layer(layer=layer, obj=obj))
+            if layers_obj:
+                for layer in layers_obj:
+                    anim_curves.extend(layers.get_anim_curves_from_layer(layer=layer, obj=o))
 
-        anim_curves.extend(cmds.listConnections(obj, t='animCurve'))
+            anim_curves.extend(cmds.listConnections(o, t='animCurve'))
+
+        print(anim_curves)
 
         self.warp_curves = TimeWarpCurve(curves=anim_curves)
 
@@ -62,12 +67,7 @@ class TimeWarp(object):
             print(layer_objects)
             objects.extend(objects)
 
-    def bake(self):
-        if not self.warp_curves:
-            return
-
-        warp_node = self.warp_curves.timewarp_node
-
+    def bake(self, warp_node):
         curves = cmds.listConnections('{}.output'.format(warp_node))
         bake_attributes = [cmds.listConnections('{}.output'.format(curve), p=True) for curve in curves]
         flatten_list = [i for x in bake_attributes for i in x]
