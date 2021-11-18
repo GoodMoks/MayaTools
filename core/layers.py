@@ -35,7 +35,7 @@ def get_base_anim_layer_curves(obj):
     :return: 'list' with base animation curves
     """
     base_curves = []
-    obj_curves = get_anim_curves_from_layer(layer='BaseAnimation', obj=obj)
+    obj_curves = get_curves_object_from_layer(layer='BaseAnimation', obj=obj)
     if obj_curves:
         base_curves.extend(obj_curves)
     curves_not_in_layer = cmds.listConnections(obj, t='animCurve')
@@ -72,7 +72,7 @@ def get_objects_from_layer(layer, attributes=False):
     return objects
 
 
-def get_all_anim_curves_from_layer(layer):
+def get_all_layer_curves(layer):
     """ return all animation curves for all objects in layer
 
     :param layer: 'str' animation layer
@@ -82,7 +82,10 @@ def get_all_anim_curves_from_layer(layer):
     return curves
 
 
-def get_anim_curves_from_layer(layer, obj):
+
+
+
+def get_curves_object_from_layer(layer, obj):
     """ return anim curves only from layer
 
     :param layer: 'str' animation layer

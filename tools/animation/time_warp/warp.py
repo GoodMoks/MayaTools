@@ -13,59 +13,48 @@ reload(utils)
 
 
 class TimeWarp(object):
-    wrap_curves = None
-
-    def get_selected_object(self):
+    @staticmethod
+    def get_selected_object():
+        """ return selected objects in scene """
         objects = cmds.ls(sl=True)
         if not objects:
             om2.MGlobal.displayError("Nothing selected objects")
         return objects
 
-    def get_selected_layer(self):
-        """  """
+    @staticmethod
+    def get_selected_layer():
+        """  return selected layer in scene """
         layer = layers.get_selected_anim_layers()
         if not layer:
             om2.MGlobal.displayError("Nothing selected layers")
         return layer
 
-    def warp_select(self):
-        sel = cmds.ls(sl=True)
-        self.warp_object_in_scene(obj=sel)
+    @staticmethod
+    def warp_objects(obj):
+        """ add warp
 
-    def warp_object_in_scene(self, obj):
+        :param obj: 'list' objects with animations
+        :return: 'TimeWarpCurve' object
+        """
         anim_curves = []
         for o in obj:
-            layers_obj = layers.get_affected_layer(obj=o)
+            curves = animation.get_all_anim_curves(o)
+            if curves:
+                anim_curves.extend(curves)
 
-            if layers_obj:
-                for layer in layers_obj:
-                    anim_curves.extend(layers.get_anim_curves_from_layer(layer=layer, obj=o))
+        if anim_curves:
+            return TimeWarpCurve(curves=anim_curves)
 
-            anim_curves.extend(cmds.listConnections(o, t='animCurve'))
+    @staticmethod
+    def warp_layers(layer):
+        anim_curves = []
+        layer_objects = layers.get_objects_from_layer(layer=layer)
+        if layer_objects:
+            for obj in layer_objects:
+                curves = layers.get_curves_object_from_layer(layer=layer, obj=obj)
+                anim_curves.extend(curves)
 
-        print(anim_curves)
 
-        self.warp_curves = TimeWarpCurve(curves=anim_curves)
-
-    def test(self):
-        obj = self.get_selected_object()
-        if not obj:
-            return
-
-        layers.get_base_anim_layer_curves(obj[0])
-
-    def warp_layer(self):
-        objects = []
-        selected_layers = self.get_selected_layer()
-        if not selected_layers:
-            return
-
-        print(selected_layers)
-
-        for layer in selected_layers:
-            layer_objects = layers.get_objects_from_layer(layer=layer)
-            print(layer_objects)
-            objects.extend(objects)
 
     def bake(self, warp_node):
         curves = cmds.listConnections('{}.output'.format(warp_node))
@@ -76,19 +65,29 @@ class TimeWarp(object):
 
 
 class TimeWarpController(object):
+    @staticmethod
+    def warp_objects():
+        selected_obj = TimeWarp.get_selected_object()
+        if not selected_obj:
+            return
+
+        TimeWarp.warp_objects(selected_obj)
+
+    @staticmethod
+    def warp_layers():
+        selected_layers = TimeWarp.get_selected_layer()
+        if not selected_layers:
+            return
+
+        TimeWarp.warp_layers(layer=selected_layers)
+
     def __init__(self):
         pass
 
-    def warp_curve(self):
+    def warp_curves(self):
         pass
 
-    def warp_layer(self):
-        pass
-
-    def warp_object(self):
-        pass
-
-    def warp_object_in_layer(self):
+    def warp_objects_in_layer(self):
         pass
 
 
