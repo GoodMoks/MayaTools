@@ -72,14 +72,18 @@ def get_objects_from_layer(layer, attributes=False):
     return objects
 
 
-def get_obj_curves_from_layer(layer, obj):
+def get_obj_curves_from_layer(layer, obj, attr=None):
     """ return anim curves only from layer
 
     :param layer: 'str' animation layer
     :param obj: 'str' animated object
+    :param attr: 'str' attribute name
     :return: 'list' list with animations curve nodes
     """
     all_attributes = ['.'.join([obj, a]) for a in cmds.listAttr(obj, k=True)]
+    if attr:
+        all_attributes = ['{}.{}'.format(obj, attr)]
+
     curves = []
     for attr in all_attributes:
         curve = cmds.animLayer(layer, q=True, fcv=attr)

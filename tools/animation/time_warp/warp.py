@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 
-import MayaTools.core.animation
+import MayaTools.core.attribute as attribute
 import MayaTools.core.animation as animation
 import MayaTools.core.base as base
 import MayaTools.core.layers
@@ -16,41 +16,56 @@ reload(utils)
 
 class TimeWarp(object):
     @staticmethod
-    def get_selected_curves():
+    def get_selected_curves(error=True):
         """ return selected objects in scene """
         objects = cmds.ls(sl=True, type='animCurve')
-        if not objects:
+        if not objects and error:
             om2.MGlobal.displayError("Nothing selected animation curves")
         return objects
 
     @staticmethod
-    def get_selected_object():
+    def get_selected_object(error=True):
         """ return selected objects in scene """
         objects = cmds.ls(sl=True)
-        if not objects:
+        if not objects and error:
             om2.MGlobal.displayError("Nothing selected objects")
         return objects
 
     @staticmethod
-    def get_selected_layer():
+    def get_selected_layer(error=True):
         """  return selected layer in scene """
         layer = layers.get_selected_anim_layers()
-        if not layer:
+        if not layer and error:
             om2.MGlobal.displayError("Nothing selected layers")
         return layer
 
     @staticmethod
-    def warp_objects(obj):
+    def get_selected_channels(error=True):
+        """ return selected animation channels from channelBox """
+        selected_channels = attribute.get_selected_channels()
+        if not selected_channels and error:
+            om2.MGlobal.displayError('Nothing selected animations channels')
+        return selected_channels
+
+    @staticmethod
+    def warp_objects(obj, attr=None):
         """ add absolute warp for object
 
         :param obj: 'list' objects with animations
+        :param attr: 'list' names of attributes
         :return: 'TimeWarpCurve' object
         """
         anim_curves = []
         for o in obj:
-            curves = MayaTools.core.animation.get_all_anim_curves(o)
-            if curves:
-                anim_curves.extend(curves)
+            if attr:
+                for a in attr:
+                    curves = MayaTools.core.animation.get_all_anim_curves(obj=o, attr=a)
+                    if curves:
+                        anim_curves.extend(curves)
+            else:
+                curves = MayaTools.core.animation.get_all_anim_curves(obj=o)
+                if curves:
+                    anim_curves.extend(curves)
 
         if anim_curves:
             return TimeWarpCurve(curves=anim_curves)
@@ -128,7 +143,11 @@ class TimeWarp(object):
         time_range = TimeWarpCurve.get_time_range()
         cmds.bakeResults(flatten_list, time=[time_range], simulation=True, smart=True)
 
+    @staticmethod
+    def adaptive_build(obj=None, layer=None, attr=None, curves=None):
+        pass
 
+    
 class TimeWarpController(object):
     @staticmethod
     def warp_objects():
@@ -165,8 +184,23 @@ class TimeWarpController(object):
 
     @staticmethod
     def warp_attributes():
-        pass
+        selected_obj = TimeWarp.get_selected_object()
+        selected_attr = attribute.get_selected_channels()
+        if selected_attr and selected_obj:
+            TimeWarp.warp_objects(obj=selected_obj, attr=selected_attr)
 
+    @staticmethod
+    def adaptive_warp():
+        selected_obj = TimeWarp.get_selected_object(error=False)
+        selected_attr = TimeWarp.get_selected_channels(error=False)
+        selected_layer = TimeWarp.get_selected_layer(error=False)
+        selected_curves = TimeWarp.get_selected_curves(error=False)
+
+        if not selected_obj and not selected_attr and not selected_layer and not selected_curves:
+            om2.MGlobal.displayError('Nothing selected, please select objects/layers/attributes/curves')
+            return
+
+        TimeWarp.adaptive_build(obj=selected_obj, layer=selected_layer, attr=selected_attr, curves=selected_curves)
 
 class TimeWarpCurve(object):
     @staticmethod
