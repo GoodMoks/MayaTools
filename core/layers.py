@@ -13,7 +13,7 @@ def enabled_layer(obj, state):
             cmds.setAttr(layer + '.enabled', state)
 
 
-def get_affected_layer(obj, skip_base_layer=False):
+def get_affected_anim_layer(obj, skip_base_layer=False):
     """ get related animation later for given object
 
     :param obj: 'str' name of object
@@ -28,14 +28,14 @@ def get_affected_layer(obj, skip_base_layer=False):
     return layers
 
 
-def get_base_anim_layer_curves(obj):
+def get_base_layer_curves(obj):
     """ return base animation curve for given object
 
     :param obj: 'str' name of object
     :return: 'list' with base animation curves
     """
     base_curves = []
-    obj_curves = get_curves_object_from_layer(layer='BaseAnimation', obj=obj)
+    obj_curves = get_obj_curves_from_layer(layer='BaseAnimation', obj=obj)
     if obj_curves:
         base_curves.extend(obj_curves)
     curves_not_in_layer = cmds.listConnections(obj, t='animCurve')
@@ -72,20 +72,7 @@ def get_objects_from_layer(layer, attributes=False):
     return objects
 
 
-def get_all_layer_curves(layer):
-    """ return all animation curves for all objects in layer
-
-    :param layer: 'str' animation layer
-    :return: 'list' with animation curves
-    """
-    curves = cmds.animLayer(layer, anc=True, q=True)
-    return curves
-
-
-
-
-
-def get_curves_object_from_layer(layer, obj):
+def get_obj_curves_from_layer(layer, obj):
     """ return anim curves only from layer
 
     :param layer: 'str' animation layer
@@ -100,3 +87,47 @@ def get_curves_object_from_layer(layer, obj):
             curves.extend(curve)
 
     return curves
+
+
+def get_all_curves_from_layer(layer):
+    """ return all animation curves for all objects in layer
+
+    :param layer: 'str' animation layer
+    :return: 'list' with animation curves
+    """
+    curves = cmds.animLayer(layer, anc=True, q=True)
+    return curves
+
+
+def object_in_layer(obj, layer):
+    """ checks if there is an object in the layer
+
+    Args:
+        obj: 'str' name of object
+        layer: 'str' name of animation layer
+
+    Returns: 'bool' if in layer return True, if not return False
+
+    """
+    obj_layers = get_affected_anim_layer(obj=obj)
+    if layer in obj_layers:
+        return True
+    return False
+
+# def get_all_curves_from_layer(layer):
+#     """ return all anim curves from layers for all objects
+#
+#     Args:
+#         layer: 'str' layer name
+#
+#     Returns: 'list' animation curves
+#
+#     """
+#     anim_curves = []
+#     layer_objects = get_objects_from_layer(layer=layer)
+#     if layer_objects:
+#         for obj in layer_objects:
+#             curves = get_obj_curves_from_layer(layer=layer, obj=obj)
+#             anim_curves.extend(curves)
+#
+#     return anim_curves

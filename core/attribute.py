@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import MayaTools.core.base as base
 import maya.api.OpenMaya as om2
+import maya.mel as mel
 
 """ Module for work with attribute """
 
@@ -20,7 +21,6 @@ def has_attr(obj, attr):
     m_obj = base.get_MObject(obj)
     dep_node = om2.MFnDependencyNode(m_obj)
     return dep_node.hasAttribute(attr)
-
 
 
 def add_attr(obj, attr, dv=0.5, min=0.0, max=1.0, at='double', en=None):
@@ -55,3 +55,16 @@ def unlock_attr(obj, attr):
             cmds.setAttr(full_attr, l=False, k=True)
         except:
             pass
+
+
+def get_selected_channels():
+    """ get selected attribute channels in channelBox
+
+    Returns: 'list' selected attributes
+
+    """
+    channel_box = mel.eval('global string $gChannelBoxName; $temp=$gChannelBoxName;')
+    attrs = cmds.channelBox(channel_box, q=True, sma=True)
+    if not attrs:
+        return
+    return attrs
