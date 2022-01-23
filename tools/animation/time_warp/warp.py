@@ -147,7 +147,7 @@ class TimeWarp(object):
     def adaptive_build(obj=None, layer=None, attr=None, curves=None):
         pass
 
-    
+
 class TimeWarpController(object):
     @staticmethod
     def warp_objects():
